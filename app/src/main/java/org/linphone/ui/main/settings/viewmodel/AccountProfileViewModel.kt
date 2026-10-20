@@ -295,6 +295,7 @@ class AccountProfileViewModel
                     // The credentials go only once the unregister is done: removed at once, the unregister got no
                     // answer to the server's challenge and the server kept the phone as signed in (as iOS c2abdd7c8).
                     clearAuthInfoAfterUnregister(core)
+                    SecureLinkAdmin.scheduleZrtpCacheWipe(core)
                     core.config.cleanEntry("misc", "contacts-vcard-list")
                     core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
                     core.config.sync()

@@ -728,6 +728,7 @@ class CoreContext
             config.cleanEntry("misc", "config-uri")
             Log.i("$TAG SecureLink: removed misc/config-uri – no provisioning re-fetch at start")
         }
+        SecureLinkAdmin.wipeZrtpCacheIfScheduled(config)
         // SecureLink: logs never go to Belledonne's upload server (files.linphone.org), as iOS
         config.setString("misc", "log_collection_upload_server_url", "")
 

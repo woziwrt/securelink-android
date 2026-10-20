@@ -7,6 +7,7 @@
 package org.linphone.utils
 
 import androidx.annotation.WorkerThread
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
@@ -21,6 +22,7 @@ import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom
 import org.linphone.core.ChatRoomListenerStub
 import org.linphone.core.Conference
+import org.linphone.core.Config
 import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.tools.Log
@@ -363,6 +365,26 @@ object SecureLinkAdmin {
                 ?: participant.address.username.orEmpty()
         }.sorted()
         return if (names.isEmpty()) coreContext.context.getString(R.string.securelink_group) else names.joinToString(", ")
+    }
+
+    // ZRTP remembers whose security word was confirmed. After "sign out and delete everything" a new account on this
+    // phone must not inherit that – the cache file goes before the core opens it again (it is open while the core runs)
+    private const val ZRTP_CACHE = "zrtp-secrets.db"
+
+    @WorkerThread
+    fun scheduleZrtpCacheWipe(core: Core) {
+        core.config.setBool("securelink", "wipe_zrtp_cache", true)
+        core.config.sync()
+    }
+
+    /** Call with the core stopped (or not created yet) */
+    fun wipeZrtpCacheIfScheduled(config: Config) {
+        if (!config.getBool("securelink", "wipe_zrtp_cache", false)) return
+        val dir = coreContext.context.filesDir
+        for (suffix in listOf("", "-journal", "-wal", "-shm")) File(dir, ZRTP_CACHE + suffix).delete()
+        config.setBool("securelink", "wipe_zrtp_cache", false)
+        config.sync()
+        Log.i("$TAG ZRTP cache wiped after sign-out – no confirmed security word is inherited")
     }
 
     /** Call history lives 7 days, like messages – older entries are deleted, not just hidden (as iOS) */

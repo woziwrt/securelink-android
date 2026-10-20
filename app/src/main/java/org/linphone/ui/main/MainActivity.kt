@@ -901,6 +901,7 @@ class MainActivity : GenericActivity() {
             core.provisioningUri = url
             Log.w("$TAG Remote provisioning URL set to [$url], restarting Core now")
             core.stop()
+            SecureLinkAdmin.wipeZrtpCacheIfScheduled(core.config) // SecureLink: new account, no inherited trust
             Log.i("$TAG Core has been stopped, let's restart it")
             core.start()
             Log.i("$TAG Core has been restarted")

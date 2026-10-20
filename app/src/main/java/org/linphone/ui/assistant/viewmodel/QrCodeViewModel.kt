@@ -34,6 +34,7 @@ import org.linphone.utils.Event
 import org.linphone.R
 import org.linphone.core.GlobalState
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class QrCodeViewModel
     @UiThread
@@ -114,6 +115,7 @@ class QrCodeViewModel
                 coreContext.postOnCoreThread { core ->
                     Log.i("$TAG Stopping Core")
                     core.stop()
+                    SecureLinkAdmin.wipeZrtpCacheIfScheduled(core.config) // SecureLink: new account, no inherited trust
                     Log.i("$TAG Core has been stopped, restarting it")
                     core.start()
                     Log.i("$TAG Core has been restarted")
