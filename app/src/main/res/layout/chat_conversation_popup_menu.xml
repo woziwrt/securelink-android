@@ -115,6 +115,7 @@
         <androidx.appcompat.widget.AppCompatTextView
             style="@style/popup_menu_item"
             android:id="@+id/media"
+            android:visibility="gone"
             android:onClick="@{mediaClickListener}"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -128,6 +129,7 @@
         <androidx.appcompat.widget.AppCompatTextView
             style="@style/popup_menu_item"
             android:id="@+id/documents"
+            android:visibility="gone"
             android:onClick="@{documentsClickListener}"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

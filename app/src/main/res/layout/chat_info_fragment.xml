@@ -302,8 +302,10 @@
                         app:layout_constraintTop_toBottomOf="@id/call"
                         app:layout_constraintBottom_toBottomOf="parent" />
 
+                    <!-- SecureLink: no meetings (as iOS 7220de638) -->
                     <ImageView
                         android:id="@+id/meeting"
+                        android:visibility="gone"
                         android:layout_width="56dp"
                         android:layout_height="56dp"
                         android:layout_marginTop="10dp"
@@ -312,7 +314,6 @@
                         android:padding="16dp"
                         android:src="@drawable/video_conference"
                         android:contentDescription="@string/content_description_schedule_meeting"
-                        android:visibility="@{viewModel.isReadOnly ? View.GONE : View.VISIBLE}"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintStart_toEndOf="@id/call"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -320,6 +321,7 @@
 
                     <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/meeting_label"
+                        android:visibility="gone"
                         style="@style/default_text_style"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -334,7 +336,6 @@
                         android:maxLines="2"
                         android:ellipsize="end"
                         android:labelFor="@id/meeting"
-                        android:visibility="@{viewModel.isReadOnly ? View.GONE : View.VISIBLE}"
                         app:layout_constraintStart_toEndOf="@id/call_label"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/meeting"
@@ -412,6 +413,7 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/media_documents_actions"
+                    android:visibility="gone"
                     style="@style/section_header_style"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -428,6 +430,7 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/action_media"
+                    android:visibility="gone"
                     style="@style/context_menu_action_label_style"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -444,6 +447,7 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/action_documents"
+                    android:visibility="gone"
                     style="@style/context_menu_action_label_style"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
