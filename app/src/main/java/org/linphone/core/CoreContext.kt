@@ -598,6 +598,24 @@ class CoreContext
         }
 
         @WorkerThread
+        override fun onAccountRegistrationStateChanged(
+            core: Core,
+            account: Account,
+            state: RegistrationState?,
+            message: String
+        ) {
+            // SecureLink: the push token arrives a moment after the account, so the account was added "without push"
+            // and the keep-alive foreground service went on. Registered with push now – it is no longer needed.
+            if (state == RegistrationState.Ok && account.params.isPushNotificationAvailable &&
+                corePreferences.keepServiceAlive
+            ) {
+                Log.i("$TAG SecureLink: registered with push, keep-alive foreground service no longer needed")
+                corePreferences.keepServiceAlive = false
+                stopKeepAliveService()
+            }
+        }
+
+        @WorkerThread
         override fun onAccountAdded(core: Core, account: Account) {
             // Prevent this trigger when core is stopped/start in remote prov
             if (core.globalState == GlobalState.Off) return
