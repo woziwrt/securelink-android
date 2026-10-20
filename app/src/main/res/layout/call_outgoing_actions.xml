@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SecureLink: outgoing call = hang up, microphone, speaker only; no video, no actions handle (as iOS) -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
@@ -17,6 +18,7 @@
         <ImageView
             android:onClick="@{() -> viewModel.toggleExpandActionsMenu()}"
             android:id="@+id/call_actions_handle"
+            android:visibility="gone"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:padding="11dp"
@@ -52,7 +54,7 @@
             android:layout_height="@dimen/call_button_size"
             android:layout_marginEnd="16dp"
             android:padding="@dimen/call_button_icon_padding"
-            android:visibility="@{viewModel.hideVideo ? View.GONE : View.VISIBLE}"
+            android:visibility="gone"
             android:contentDescription="@null"
             android:enabled="@{false}"
             android:src="@{viewModel.isVideoEnabled ? @drawable/video_camera : @drawable/video_camera_slash, default=@drawable/video_camera}"
