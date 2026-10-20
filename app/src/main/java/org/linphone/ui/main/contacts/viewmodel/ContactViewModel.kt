@@ -41,6 +41,7 @@ import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Friend
 import org.linphone.core.SecurityLevel
+import org.linphone.core.ZrtpPeerStatus
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
 import org.linphone.ui.main.contacts.model.ContactAvatarModel
@@ -81,6 +82,9 @@ class ContactViewModel
     val isFavourite = MutableLiveData<Boolean>()
 
     val isBlocked = MutableLiveData<Boolean>()
+
+    // SecureLink: one line instead of the trust/devices section – was the security word confirmed with this person
+    val securityWordVerified = MutableLiveData<Boolean>()
 
     val showBackButton = MutableLiveData<Boolean>()
 
@@ -322,6 +326,10 @@ class ContactViewModel
     fun refreshContactInfo() {
         isFavourite.postValue(friend.starred)
         isBlocked.postValue(SecureLinkAdmin.isBlocked(coreContext.core, friend.address))
+        val address = friend.address
+        securityWordVerified.postValue(
+            address != null && coreContext.core.getZrtpStatus(address.asStringUriOnly()) == ZrtpPeerStatus.Valid
+        )
         // Do not show edit contact button for contacts not stored in a FriendList or
         // if they are in a temporary one (for example if they are from a remote directory such as LDAP or CardDAV)
         isStored.postValue(!coreContext.contactsManager.isContactTemporary(friend))

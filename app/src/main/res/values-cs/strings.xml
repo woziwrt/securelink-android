@@ -986,4 +986,7 @@
     <string name="securelink_terms_text">SecureLink je určený jen pro pozvané dospělé uživatele (18+). Používáním souhlasíte, že nebudete posílat nezákonný, urážlivý ani obtěžující obsah a nebudete nikoho obtěžovat. Za takové chování správce účet zablokuje. Nevhodnou zprávu nebo uživatele můžete kdykoli nahlásit správci (podržte zprávu nebo otevřete kontakt); správce na hlášení reaguje do 24 hodin.</string>
     <string name="securelink_terms_accept">Souhlasím</string>
     <string name="securelink_terms_read_full">Celé podmínky</string>
+    <string name="securelink_contact_security_word_title">Bezpečnostní slovo</string>
+    <string name="securelink_contact_security_word_verified">Ověřeno ✓</string>
+    <string name="securelink_contact_security_word_unverified">Zatím neověřeno</string>
 </resources>
