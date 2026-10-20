@@ -1110,4 +1110,8 @@
     <string name="securelink_privacy_policy">Privacy policy</string>
     <string name="securelink_write_to_support">Write to support</string>
     <string name="securelink_source_url" translatable="false">https://github.com/woziwrt/securelink-android</string>
+    <string name="securelink_terms_title">Terms of use</string>
+    <string name="securelink_terms_text">SecureLink is for invited adult users (18+) only. By using it you agree not to send unlawful, offensive or harassing content and not to harass anyone. The administrator blocks accounts for such behaviour. You can report an inappropriate message or user to the administrator at any time (long-press the message or open the contact); the administrator responds to reports within 24 hours.</string>
+    <string name="securelink_terms_accept">I agree</string>
+    <string name="securelink_terms_read_full">Full terms</string>
 </resources>

@@ -982,4 +982,8 @@
     <string name="securelink_write_to_support">Napsat podpoře</string>
     <string name="help_about_open_source_licenses_title">Licence</string>
     <string name="help_about_open_source_licenses_subtitle">SecureLink © 2026 Petr Wozniak, šířeno pod licencí GNU GPL v3. S využitím Linphone © Belledonne Communications (GPL v3). Zdrojový kód: github.com/woziwrt/securelink-android</string>
+    <string name="securelink_terms_title">Podmínky používání</string>
+    <string name="securelink_terms_text">SecureLink je určený jen pro pozvané dospělé uživatele (18+). Používáním souhlasíte, že nebudete posílat nezákonný, urážlivý ani obtěžující obsah a nebudete nikoho obtěžovat. Za takové chování správce účet zablokuje. Nevhodnou zprávu nebo uživatele můžete kdykoli nahlásit správci (podržte zprávu nebo otevřete kontakt); správce na hlášení reaguje do 24 hodin.</string>
+    <string name="securelink_terms_accept">Souhlasím</string>
+    <string name="securelink_terms_read_full">Celé podmínky</string>
 </resources>

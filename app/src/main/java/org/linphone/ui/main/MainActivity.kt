@@ -82,6 +82,8 @@ import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
 import androidx.core.content.edit
 import org.linphone.ui.sso.SingleSignOnActivity
+import org.linphone.ui.SecureLinkTerms
+import org.linphone.utils.SecureLinkAdmin
 
 @UiThread
 class MainActivity : GenericActivity() {
@@ -150,7 +152,10 @@ class MainActivity : GenericActivity() {
             message: String
         ) {
             if (state == RegistrationState.Ok) {
-                coreContext.postOnMainThread { askPermissionsAfterLogin() }
+                coreContext.postOnMainThread {
+                    showTermsAfterLogin()
+                    askPermissionsAfterLogin()
+                }
             }
         }
     }
@@ -503,7 +508,17 @@ class MainActivity : GenericActivity() {
         viewModel.enableAccountMonitoring(true)
         viewModel.updateMissingPermissionAlert()
         viewModel.updateAccountsAndNetworkReachability()
+        showTermsAfterLogin()
         askPermissionsAfterLogin()
+    }
+
+    // SecureLink: terms of use (18+, no objectionable content, reports within 24 h) accepted once after login (as iOS)
+    private fun showTermsAfterLogin() {
+        coreContext.postOnCoreThread { core ->
+            if (core.accountList.isEmpty()) return@postOnCoreThread
+            val termsUrl = SecureLinkAdmin.setting(core, "terms_url")
+            coreContext.postOnMainThread { SecureLinkTerms.showIfNeeded(this, termsUrl) }
+        }
     }
 
     private fun askPermissionsAfterLogin() {
