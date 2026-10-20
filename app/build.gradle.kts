@@ -133,6 +133,17 @@ android {
 
     signingConfigs {
         create("release") {
+            // SecureLink: the release key never lives in this repository – the build script passes its path and
+            // password from the environment (password from the Keychain), keystore.properties stays upstream's
+            val secureLinkKeyStore = System.getenv("SECURELINK_KEYSTORE")
+            if (secureLinkKeyStore != null) {
+                storeFile = file(secureLinkKeyStore)
+                storePassword = System.getenv("SECURELINK_KEYSTORE_PASSWORD")
+                keyAlias = "securelink"
+                keyPassword = System.getenv("SECURELINK_KEYSTORE_PASSWORD")
+                println("Signing config release is using the SecureLink key [$storeFile]")
+                return@create
+            }
             val keyStorePath = keystoreProperties["storeFile"] as String
             val keyStore = project.file(keyStorePath)
             if (keyStore.exists()) {
