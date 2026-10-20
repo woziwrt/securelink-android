@@ -515,7 +515,7 @@ class ContactViewModel
             val chatParams = params.chatParams ?: return
             chatParams.ephemeralLifetime = 0 // Make sure ephemeral is disabled by default
 
-            val sameDomain = remote.domain == corePreferences.defaultDomain && remote.domain == account.params.domain
+            val sameDomain = remote.domain == account.params.domain // SecureLink: our own server only, never linphone.org
             if (account.params.instantMessagingEncryptionMandatory && sameDomain) {
                 Log.i(
                     "$TAG Account is in secure mode & domain matches, creating an E2E encrypted conversation"
@@ -663,7 +663,7 @@ class ContactViewModel
             val localAddress = account.params.identityAddress
             val addresses = friend.addresses
             for (address in addresses) {
-                val sameDomain = address.domain == corePreferences.defaultDomain && address.domain == account.params.domain
+                val sameDomain = address.domain == account.params.domain // SecureLink: our own server only, never linphone.org
                 if (account.params.instantMessagingEncryptionMandatory && sameDomain) {
                     params.securityLevel = Conference.SecurityLevel.EndToEnd
                 } else if (!account.params.instantMessagingEncryptionMandatory) {

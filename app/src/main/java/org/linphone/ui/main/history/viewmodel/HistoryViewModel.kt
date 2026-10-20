@@ -234,7 +234,7 @@ class HistoryViewModel
                 val chatParams = params.chatParams ?: return@postOnCoreThread
                 chatParams.ephemeralLifetime = 0 // Make sure ephemeral is disabled by default
 
-                val sameDomain = remote.domain == corePreferences.defaultDomain && remote.domain == account.params.domain
+                val sameDomain = remote.domain == account.params.domain // SecureLink: our own server only, never linphone.org
                 if (account.params.instantMessagingEncryptionMandatory && sameDomain) {
                     Log.i(
                         "$TAG Account is in secure mode & domain matches, creating an E2E encrypted conversation"

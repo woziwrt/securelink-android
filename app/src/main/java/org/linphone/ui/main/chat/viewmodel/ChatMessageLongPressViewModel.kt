@@ -77,6 +77,13 @@ class ChatMessageLongPressViewModel : GenericViewModel() {
         MutableLiveData()
     }
 
+    // SecureLink: "Report to administrator", first in the menu of a received message (App Review 1.2, as iOS)
+    val canReport = MutableLiveData<Boolean>()
+
+    val reportMessageEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
     val deleteMessageEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
@@ -102,6 +109,7 @@ class ChatMessageLongPressViewModel : GenericViewModel() {
     @UiThread
     fun setMessage(model: MessageModel) {
         hideForward.value = true // SecureLink: no forwarding out of a conversation (as iOS)
+        canReport.value = !model.isOutgoing
         hideCopyTextToClipboard.value = model.text.value.isNullOrEmpty()
         isChatRoomReadOnly.value = model.chatRoomIsReadOnly
         isMessageOutgoing.value = model.isOutgoing
@@ -124,6 +132,11 @@ class ChatMessageLongPressViewModel : GenericViewModel() {
         onDismissedEvent.value = Event(true)
         emojiBottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         visible.value = false
+    }
+
+    @UiThread
+    fun report() {
+        reportMessageEvent.value = Event(true)
     }
 
     @UiThread

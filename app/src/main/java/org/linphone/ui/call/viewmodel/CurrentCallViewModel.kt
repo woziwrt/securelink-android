@@ -1494,7 +1494,7 @@ class CurrentCallViewModel
         val chatParams = params.chatParams ?: return null
         chatParams.ephemeralLifetime = 0 // Make sure ephemeral is disabled by default
 
-        val sameDomain = remoteAddress.domain == corePreferences.defaultDomain && remoteAddress.domain == account.params.domain
+        val sameDomain = remoteAddress.domain == account.params.domain // SecureLink: our own server only, never linphone.org
         if (account.params.instantMessagingEncryptionMandatory && sameDomain) {
             Log.i(
                 "$TAG Account is in secure mode & domain matches, requesting E2E encryption"

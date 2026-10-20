@@ -24,7 +24,6 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import org.linphone.LinphoneApplication.Companion.coreContext
-import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.core.Address
 import org.linphone.core.ChatRoom
@@ -180,7 +179,7 @@ class StartConversationViewModel
         val chatParams = params.chatParams ?: return
         chatParams.ephemeralLifetime = 0 // Make sure ephemeral is disabled by default
 
-        val sameDomain = remote.domain == corePreferences.defaultDomain && remote.domain == account.params.domain
+        val sameDomain = remote.domain == account.params.domain // SecureLink: our own server only, never linphone.org
         if (account.params.instantMessagingEncryptionMandatory && sameDomain) {
             Log.i("$TAG Account is in secure mode & domain matches, creating an E2E encrypted conversation")
             chatParams.backend = ChatRoom.Backend.FlexisipChat

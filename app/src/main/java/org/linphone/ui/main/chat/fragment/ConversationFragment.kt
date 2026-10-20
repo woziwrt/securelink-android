@@ -94,6 +94,7 @@ import org.linphone.utils.setKeyboardInsetListener
 import org.linphone.utils.showKeyboard
 import androidx.core.net.toUri
 import org.linphone.ui.main.chat.adapter.ConversationParticipantsAdapter
+import org.linphone.utils.SecureLinkAdmin
 import org.linphone.utils.ShortcutUtils
 import kotlin.collections.arrayListOf
 
@@ -529,6 +530,10 @@ open class ConversationFragment : SlidingPaneChildFragment() {
                     ShortcutUtils.reportChatRoomShortcutHasBeenUsed(requireContext(), viewModel.conversationId)
 
                     sendMessageViewModel.configureChatRoom(viewModel.chatRoom)
+                    // SecureLink: a report opened this administrator conversation – its text waits in the message field
+                    SecureLinkAdmin.takeDraft(viewModel.conversationId)?.let { draft ->
+                        sendMessageViewModel.textToSend.value = draft
+                    }
                     adapter.setIsConversationSecured(viewModel.isEndToEndEncrypted.value == true)
 
                     // Wait for chat room to be ready before trying to forward a message in it
@@ -955,6 +960,30 @@ open class ConversationFragment : SlidingPaneChildFragment() {
                     sendMessageViewModel.replyToMessage(model)
                     // Open keyboard & focus edit text
                     binding.sendArea.messageToSend.showKeyboard()
+                }
+            }
+        }
+
+        messageLongPressViewModel.reportMessageEvent.observe(viewLifecycleOwner) {
+            it.consume {
+                val model = messageLongPressViewModel.messageModel.value ?: return@consume
+                messageLongPressViewModel.dismiss()
+                coreContext.postOnCoreThread { core ->
+                    val draft = SecureLinkAdmin.reportMessageDraft(core, model.chatMessage)
+                    SecureLinkAdmin.openAdminConversation(core, draft, { conversationId ->
+                        coreContext.postOnMainThread {
+                            Log.i("$TAG Opening the administrator conversation with a report draft")
+                            sharedViewModel.showConversationEvent.value = Event(conversationId)
+                            sharedViewModel.navigateToConversationsEvent.value = Event(true)
+                        }
+                    }, {
+                        coreContext.postOnMainThread {
+                            (requireActivity() as GenericActivity).showRedToast(
+                                getString(R.string.conversation_failed_to_create_toast),
+                                R.drawable.warning_circle
+                            )
+                        }
+                    })
                 }
             }
         }

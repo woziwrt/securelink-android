@@ -98,6 +98,26 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
+                <!-- SecureLink: report a received message to the administrator, first in the menu (as iOS) -->
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/chat_bubble_popup_menu_style"
+                    android:id="@+id/action_report"
+                    android:onClick="@{() -> viewModel.report()}"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/securelink_report_message"
+                    android:textColor="?attr/color_danger_500"
+                    android:background="@drawable/action_background_top"
+                    android:drawableEnd="@drawable/shield_warning"
+                    android:visibility="@{viewModel.canReport ? View.VISIBLE : View.GONE, default=gone}" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?attr/color_separator"
+                    android:importantForAccessibility="no"
+                    android:visibility="@{viewModel.canReport ? View.VISIBLE : View.GONE, default=gone}"/>
+
                 <androidx.appcompat.widget.AppCompatTextView
                     style="@style/chat_bubble_popup_menu_style"
                     android:id="@+id/action_resend"
