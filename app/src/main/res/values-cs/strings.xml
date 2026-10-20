@@ -63,7 +63,7 @@
     <string name="export_file_to_media_store_error_toast">Chyba při exportování souboru do systémové galerie</string>
     <string name="media_player_generic_error_toast">Chyba při pokusu o vytvoření přehrávače médií</string>
     <string name="assistant_permissions_post_notifications_title"><b>Odesílání notifikací:</b> Abyste byli informováni, když obdržíte zprávu nebo hovor.</string>
-    <string name="conversation_failed_to_create_toast">Vytvoření konverzace se nezdařilo!</string>
+    <string name="conversation_failed_to_create_toast">Konverzaci nelze začít – kontakt teď není dostupný</string>
     <string name="conversation_ephemeral_messages_enabled_toast">Mizející zprávy byly povoleny</string>
     <string name="conversation_no_app_registered_to_handle_content_type_error_toast">Nenalezena žádná aplikace k otevření tohoto typu souboru</string>
     <string name="conversation_file_cant_be_opened_error_toast">Soubor nelze otevřít!</string>
@@ -968,4 +968,5 @@
     <string name="securelink_call_busy">Obsazeno</string>
     <string name="securelink_call_failed">Hovor se nepodařil – zkuste to prosím znovu</string>
     <string name="securelink_call_did_not_connect">Hovor se nespojil</string>
+    <string name="securelink_peer_no_device">Kontakt teď nemá přihlášený telefon. Zprávy počkají a doručí se, až se znovu přihlásí.</string>
 </resources>

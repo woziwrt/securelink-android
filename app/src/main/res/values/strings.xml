@@ -606,7 +606,7 @@
     <string name="conversation_dialog_open_plain_text_label">Open as plain text</string>
     <string name="conversation_failed_to_play_voice_recording_message">Voice recording cannot be played!</string>
     <string name="conversation_message_deleted_toast">Message has been deleted</string>
-    <string name="conversation_failed_to_create_toast">Failed to create conversation!</string>
+    <string name="conversation_failed_to_create_toast">Cannot start the conversation – the contact is not available right now</string>
     <string name="conversation_invalid_participant_due_to_security_mode_toast">Can\'t create conversation with a participant not on the same domain due to security restrictions!</string>
     <string name="conversation_media_not_found_toast">Selected media wasn\'t found</string>
     <string name="conversation_subject_changed_toast">Conversation subject has changed</string>
@@ -1097,4 +1097,5 @@
     <string name="securelink_call_busy">Busy</string>
     <string name="securelink_call_failed">The call did not go through – please try again</string>
     <string name="securelink_call_did_not_connect">The call did not connect</string>
+    <string name="securelink_peer_no_device">Nobody is signed in on this contact\'s phone right now. Messages will wait and be delivered when they sign in again.</string>
 </resources>

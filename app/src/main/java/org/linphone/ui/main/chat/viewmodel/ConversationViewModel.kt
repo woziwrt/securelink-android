@@ -73,6 +73,9 @@ class ConversationViewModel
 
     val isEndToEndEncrypted = MutableLiveData<Boolean>()
 
+    // SecureLink: nobody on the other side has a phone signed in – messages wait until one appears (as iOS)
+    val peerHasNoDevice = MutableLiveData<Boolean>()
+
     val isEndToEndEncryptionAvailable = MutableLiveData<Boolean>()
 
     val isGroup = MutableLiveData<Boolean>()
@@ -236,6 +239,16 @@ class ConversationViewModel
                 "$TAG Remote [${remoteAddress.asStringUriOnly()}] is ${if (isComposing) "composing" else "no longer composing"}"
             )
             computeComposingLabel()
+        }
+
+        @WorkerThread
+        override fun onParticipantDeviceAdded(chatRoom: ChatRoom, eventLog: EventLog) {
+            updatePeerHasNoDevice()
+        }
+
+        @WorkerThread
+        override fun onParticipantDeviceRemoved(chatRoom: ChatRoom, eventLog: EventLog) {
+            updatePeerHasNoDevice()
         }
 
         @WorkerThread
@@ -639,6 +652,17 @@ class ConversationViewModel
     }
 
     @WorkerThread
+    private fun updatePeerHasNoDevice() {
+        if (!isChatRoomInitialized()) return
+        val others = chatRoom.participants
+        peerHasNoDevice.postValue(
+            chatRoom.hasCapability(ChatRoom.Capabilities.Encrypted.toInt()) &&
+                chatRoom.state == ChatRoom.State.Created &&
+                others.isNotEmpty() && others.all { it.devices.isEmpty() }
+        )
+    }
+
+    @WorkerThread
     private fun configureChatRoom() {
         if (!isChatRoomInitialized()) return
 
@@ -648,6 +672,7 @@ class ConversationViewModel
             chatRoom.hasCapability(ChatRoom.Capabilities.Encrypted.toInt())
         )
         isMuted.postValue(chatRoom.muted)
+        updatePeerHasNoDevice()
 
         computeConversationInfo()
 

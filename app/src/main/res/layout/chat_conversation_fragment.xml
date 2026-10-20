@@ -344,8 +344,29 @@
                     android:text="@{viewModel.composingLabel, default=`John Doe is composing...`}"
                     android:textSize="12sp"
                     android:visibility="@{viewModel.composingLabel.length() == 0 ? View.GONE : View.VISIBLE}"
-                    app:layout_constraintBottom_toTopOf="@id/warning_disabled_not_secured"
+                    app:layout_constraintBottom_toTopOf="@id/peer_no_device"
                     app:layout_constraintStart_toEndOf="@id/composing_icon"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <!-- SecureLink: the other side has no phone signed in – say why a message waits (as iOS) -->
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/default_text_style"
+                    android:id="@+id/peer_no_device"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:drawablePadding="8dp"
+                    android:background="?attr/color_main2_100"
+                    android:drawableStart="@drawable/warning_circle"
+                    android:text="@string/securelink_peer_no_device"
+                    android:textSize="13sp"
+                    android:textColor="?attr/color_main2_600"
+                    android:visibility="@{viewModel.peerHasNoDevice &amp;&amp; !viewModel.searchBarVisible ? View.VISIBLE : View.GONE, default=gone}"
+                    app:layout_constraintBottom_toTopOf="@id/warning_disabled_not_secured"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
                 <include
