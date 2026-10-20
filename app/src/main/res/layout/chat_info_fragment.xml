@@ -152,7 +152,7 @@
                         android:padding="5dp"
                         android:background="@drawable/circle_transparent_button_background"
                         android:contentDescription="@string/content_description_chat_edit_conversation_subject"
-                        android:visibility="@{!viewModel.isGroup || viewModel.isReadOnly || !viewModel.isMyselfAdmin ? View.GONE : View.VISIBLE}"
+                        android:visibility="gone"
                         app:tint="?attr/color_main2_600"
                         app:layout_constraintBottom_toBottomOf="@id/title"
                         app:layout_constraintStart_toEndOf="@id/title"

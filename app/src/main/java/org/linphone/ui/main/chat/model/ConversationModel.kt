@@ -43,6 +43,7 @@ import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
 import org.linphone.utils.ShortcutUtils
 import org.linphone.utils.TimestampUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class ConversationModel
     @WorkerThread
@@ -102,7 +103,7 @@ class ConversationModel
         override fun onStateChanged(chatRoom: ChatRoom, newState: ChatRoom.State?) {
             Log.i("$TAG Conversation state changed [${chatRoom.state}]")
             if (chatRoom.state == ChatRoom.State.Created) {
-                subject.postValue(chatRoom.subjectUtf8)
+                subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
                 computeParticipants()
             } else if (chatRoom.state == ChatRoom.State.Deleted) {
                 Log.i("$TAG Conversation [$id] has been deleted")
@@ -114,7 +115,7 @@ class ConversationModel
         override fun onConferenceJoined(chatRoom: ChatRoom, eventLog: EventLog) {
             // This is required as a Created chat room may not have the participants list yet
             Log.i("$TAG Conversation has been joined")
-            subject.postValue(chatRoom.subjectUtf8)
+            subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
             computeParticipants()
         }
 
@@ -158,7 +159,7 @@ class ConversationModel
         @WorkerThread
         override fun onSubjectChanged(chatRoom: ChatRoom, eventLog: EventLog) {
             Log.i("$TAG Conversation subject changed [${chatRoom.subjectUtf8}]")
-            subject.postValue(chatRoom.subjectUtf8)
+            subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
             computeParticipants()
         }
 
@@ -202,7 +203,7 @@ class ConversationModel
         chatRoom.addListener(chatRoomListener)
 
         computeComposingLabel()
-        subject.postValue(chatRoom.subjectUtf8)
+        subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
         computeParticipants()
 
         isMuted.postValue(chatRoom.muted)
@@ -442,9 +443,11 @@ class ConversationModel
         }
 
         if (isGroup) {
-            if (avatarModel.value == null || avatarModel.value?.contactName != chatRoom.subjectUtf8) {
+            val title = SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom) // SecureLink: members, not the subject
+            subject.postValue(title) // the directory may have loaded since (as iOS fb62f9535)
+            if (avatarModel.value == null || avatarModel.value?.contactName != title) {
                 val fakeFriend = coreContext.core.createFriend()
-                fakeFriend.name = chatRoom.subjectUtf8
+                fakeFriend.name = title
                 val model = ContactAvatarModel(fakeFriend)
                 model.defaultToConversationIcon.postValue(true)
                 model.updateSecurityLevelUsingConversation(chatRoom)

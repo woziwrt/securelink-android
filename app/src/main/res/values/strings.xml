@@ -1117,4 +1117,5 @@
     <string name="securelink_contact_security_word_title">Security word</string>
     <string name="securelink_contact_security_word_verified">Verified ✓</string>
     <string name="securelink_contact_security_word_unverified">Not verified yet</string>
+    <string name="securelink_group">Group</string>
 </resources>

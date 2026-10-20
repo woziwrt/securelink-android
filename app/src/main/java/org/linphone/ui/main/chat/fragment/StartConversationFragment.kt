@@ -107,6 +107,10 @@ class StartConversationFragment : GenericAddressPickerFragment() {
     }
 
     private fun showGroupConversationSubjectDialog() {
+        // SecureLink: no name to type – the group gets a random number on the server and shows its members here
+        viewModel.createGroupChatRoom()
+        return
+        @Suppress("UNREACHABLE_CODE")
         val model = GroupSetOrEditSubjectDialogModel("", isGroupConversation = true)
 
         val dialog = DialogUtils.getSetOrEditGroupSubjectDialog(

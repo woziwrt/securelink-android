@@ -40,6 +40,7 @@ import org.linphone.ui.main.contacts.model.ContactAvatarModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class ConversationInfoViewModel
     @UiThread
@@ -179,7 +180,7 @@ class ConversationInfoViewModel
             )
             showGreenToast(R.string.conversation_subject_changed_toast, R.drawable.check)
 
-            subject.postValue(chatRoom.subjectUtf8)
+            subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
             computeParticipantsList()
             infoChangedEvent.postValue(Event(true))
         }
@@ -586,7 +587,7 @@ class ConversationInfoViewModel
 
         val avatar = if (groupChatRoom) {
             val fakeFriend = coreContext.core.createFriend()
-            fakeFriend.name = chatRoom.subjectUtf8
+            fakeFriend.name = SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom)
             val model = ContactAvatarModel(fakeFriend)
             model.defaultToConversationIcon.postValue(true)
             model.updateSecurityLevelUsingConversation(chatRoom)

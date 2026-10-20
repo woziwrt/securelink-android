@@ -106,7 +106,8 @@ class StartConversationViewModel
 
             operationInProgress.postValue(true)
 
-            val groupChatRoomSubject = subject.value.orEmpty()
+            // SecureLink: the server stores the subject in plain text – a random number, never a readable name (as iOS)
+            val groupChatRoomSubject = SecureLinkAdmin.randomGroupSubject()
             val params = coreContext.core.createConferenceParams(null)
             params.isChatEnabled = true
             params.isGroupEnabled = true

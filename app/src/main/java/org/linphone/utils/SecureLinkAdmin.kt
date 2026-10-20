@@ -10,6 +10,7 @@ import androidx.annotation.WorkerThread
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.text.DateFormat
 import java.util.Date
 import java.util.UUID
@@ -343,6 +344,25 @@ object SecureLinkAdmin {
         val user = core.defaultAccount?.findAuthInfo()?.username.orEmpty()
         if (user.isEmpty()) return 0L
         return core.config.getInt("securelink", "deletion_requested_$user", 0).toLong()
+    }
+
+    // --- groups (as iOS 1d6a5a89b): the chat server stores a group's subject in plain text – new groups get a random
+    // number there, and the phone shows the members' names from its own directory instead
+
+    fun randomGroupSubject(): String = (1_000_000 + SecureRandom().nextInt(9_000_000)).toString()
+
+    /** What the phone shows as a conversation's name: a group shows its members, never the subject on the server */
+    @WorkerThread
+    fun conversationTitle(core: Core, room: ChatRoom): String {
+        val isGroup = !room.hasCapability(ChatRoom.Capabilities.OneToOne.toInt()) &&
+            room.hasCapability(ChatRoom.Capabilities.Conference.toInt())
+        if (!isGroup) return room.subjectUtf8.orEmpty()
+        val names = room.participants.map { participant ->
+            core.findFriend(participant.address)?.name?.takeIf { it.isNotEmpty() }
+                ?: participant.address.displayName?.takeIf { it.isNotEmpty() }
+                ?: participant.address.username.orEmpty()
+        }.sorted()
+        return if (names.isEmpty()) coreContext.context.getString(R.string.securelink_group) else names.joinToString(", ")
     }
 
     /** Call history lives 7 days, like messages – older entries are deleted, not just hidden (as iOS) */

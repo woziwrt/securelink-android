@@ -700,7 +700,7 @@ class ConversationViewModel
 
         checkIfConversationShouldBeDisabledForSecurityReasons()
 
-        subject.postValue(chatRoom.subjectUtf8)
+        subject.postValue(SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom))
 
         computeParticipantsInfo()
 
@@ -733,7 +733,7 @@ class ConversationViewModel
 
         val avatar = if (LinphoneUtils.isChatRoomAGroup(chatRoom)) {
             val fakeFriend = coreContext.core.createFriend()
-            fakeFriend.name = chatRoom.subjectUtf8
+            fakeFriend.name = SecureLinkAdmin.conversationTitle(coreContext.core, chatRoom)
             val model = ContactAvatarModel(fakeFriend)
             model.updateSecurityLevelUsingConversation(chatRoom)
             model

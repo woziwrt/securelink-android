@@ -989,4 +989,5 @@
     <string name="securelink_contact_security_word_title">Bezpečnostní slovo</string>
     <string name="securelink_contact_security_word_verified">Ověřeno ✓</string>
     <string name="securelink_contact_security_word_unverified">Zatím neověřeno</string>
+    <string name="securelink_group">Skupina</string>
 </resources>
