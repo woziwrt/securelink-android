@@ -807,7 +807,7 @@ fun Friend.getPerson(): Person {
 @WorkerThread
 fun Friend.getListOfSipAddresses(): ArrayList<Address> {
     val addressesList = arrayListOf<Address>()
-    if (corePreferences.hideSipAddresses) return addressesList
+    // SecureLink: hideSipAddresses only hides them on screen – calls and messages still need the address
 
     for (address in addresses) {
         if (addressesList.find { it.weakEqual(address) } == null) {

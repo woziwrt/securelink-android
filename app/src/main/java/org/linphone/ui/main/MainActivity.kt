@@ -63,6 +63,10 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
+import org.linphone.core.Account
+import org.linphone.core.Core
+import org.linphone.core.CoreListenerStub
+import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 import org.linphone.databinding.MainActivityBinding
 import org.linphone.ui.GenericActivity
@@ -135,6 +139,21 @@ class MainActivity : GenericActivity() {
         viewModel.updateMissingPermissionAlert()
     }
     private var afterLoginPermissionsAsked = false
+
+    // SecureLink: a login by link or QR happens while this activity is already resumed, so onResume() alone would
+    // only ask at the next app start – ask as soon as the account registers for the first time
+    private val afterLoginCoreListener = object : CoreListenerStub() {
+        override fun onAccountRegistrationStateChanged(
+            core: Core,
+            account: Account,
+            state: RegistrationState?,
+            message: String
+        ) {
+            if (state == RegistrationState.Ok) {
+                coreContext.postOnMainThread { askPermissionsAfterLogin() }
+            }
+        }
+    }
 
     private val fullScreenIntentPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -466,6 +485,16 @@ class MainActivity : GenericActivity() {
         Log.i("$TAG Stored [$defaultFragmentId] as default page")
 
         super.onPause()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        coreContext.postOnCoreThread { it.addListener(afterLoginCoreListener) }
+    }
+
+    override fun onStop() {
+        coreContext.postOnCoreThread { it.removeListener(afterLoginCoreListener) }
+        super.onStop()
     }
 
     override fun onResume() {

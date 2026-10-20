@@ -38,6 +38,11 @@ android_monitor_audio_devices=0
 
 [video]
 displaytype=MSAndroidTextureDisplay
+# SecureLink: no video in v1 (the iOS SDK is even built without it) – also enforced in CoreContext
+capture=0
+display=0
+automatically_initiate=0
+automatically_accept=0
 auto_resize_preview_to_keep_ratio=1
 max_conference_size=vga
 

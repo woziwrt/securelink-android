@@ -672,6 +672,9 @@ class CoreContext
 
         core = Factory.instance().createCoreWithConfig(corePreferences.config, context)
         core.isAutoIterateEnabled = true
+        // SecureLink: no video in v1 – a provisioning file cannot switch it back on
+        core.isVideoCaptureEnabled = false
+        core.isVideoDisplayEnabled = false
         core.addListener(coreListener)
 
         defaultAccountHasVideoConferenceFactoryUri = core.defaultAccount?.params?.audioVideoConferenceFactoryAddress != null
