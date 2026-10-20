@@ -1,3 +1,22 @@
+# SecureLink Talk for Android
+
+**This is a modified version of Linphone for Android.** SecureLink Talk is a private voice and messaging app for a closed
+group of people (end-to-end encrypted calls with post-quantum ZRTP, LIME-encrypted messages, no sign-up, no
+presence, accounts and groups as random numbers). Modified by Petr Wozniak since October 2026; the changes are the
+commits on the branch `securelink` on top of upstream 6.2.8, each marked `SecureLink:` in the code.
+
+- **SecureLink © 2026 Petr Wozniak, distributed under the GNU GPLv3. Using Linphone © Belledonne Communications (GNU GPLv3).**
+  The license text is `LICENSE.txt` (GPLv3, unchanged); copyright notices of Belledonne Communications are kept.
+- The proprietary (paid) license mentioned in the original README below is offered by Belledonne Communications for
+  their Linphone only. SecureLink Talk is available under the GNU GPLv3 only.
+- Build instructions, including the linphone-sdk build with the post-quantum engine: [`securelink/BUILD.md`](securelink/BUILD.md)
+- Components and licences built into the app: [`securelink/THIRD-PARTY-LICENSES.md`](securelink/THIRD-PARTY-LICENSES.md)
+- Every released APK has a tag `android-<version>` with its exact source.
+
+The original Linphone README follows.
+
+---
+
 
 [![pipeline status](https://gitlab.linphone.org/BC/public/linphone-android/badges/master/pipeline.svg)](https://gitlab.linphone.org/BC/public/linphone-android/commits/master) 
 [![weblate status](https://weblate.linphone.org/widget/linphone/linphone-android-6-0/status-badge.png)](https://weblate.linphone.org/engage/linphone/)
