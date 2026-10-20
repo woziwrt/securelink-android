@@ -27,8 +27,8 @@
     <string name="emoji_surprised" translatable="false">😮</string>
     <string name="emoji_tear" translatable="false">😢</string>
 
-    <string name="help_about_open_source_licenses_title" translatable="false">GNU General Public License v3.0</string>
-    <string name="help_about_open_source_licenses_subtitle" translatable="false">© Belledonne Communications 2010-2025</string>
+    <string name="help_about_open_source_licenses_title">Licence</string>
+    <string name="help_about_open_source_licenses_subtitle">SecureLink © 2026 Petr Wozniak, distributed under the GNU GPL v3. Built on Linphone © Belledonne Communications (GPL v3). Source code: github.com/woziwrt/securelink-android</string>
     <string name="help_advanced_send_debug_logs_email_address" translatable="false">linphone-android@belledonne-communications.com</string>
 
     <string name="website_contact_url" translatable="false">https://linphone.org/contact</string>
@@ -1106,4 +1106,8 @@
     <string name="securelink_signout_message">The account is removed from this phone. It stays on the server – to delete it, use “Request account deletion”.</string>
     <string name="securelink_deletion_notice_to_admin">🗑️ I requested the deletion of my account in the app. The request is recorded on the server (securelink-check).</string>
     <string name="securelink_deletion_requested_on">Deletion requested on %1$s – the account will be deleted within 7 days</string>
+    <string name="securelink_terms">Terms of use</string>
+    <string name="securelink_privacy_policy">Privacy policy</string>
+    <string name="securelink_write_to_support">Write to support</string>
+    <string name="securelink_source_url" translatable="false">https://github.com/woziwrt/securelink-android</string>
 </resources>

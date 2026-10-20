@@ -38,6 +38,7 @@ import org.linphone.ui.GenericViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class HelpViewModel
     @UiThread
@@ -57,6 +58,13 @@ class HelpViewModel
     val firebaseProjectId = MutableLiveData<String>()
 
     val checkUpdateAvailable = MutableLiveData<Boolean>()
+
+    // SecureLink: our privacy policy, terms and support address come from the server profile (App Review 5.1.1(i), 1.2)
+    val privacyUrl = MutableLiveData<String>()
+
+    val termsUrl = MutableLiveData<String>()
+
+    val supportEmail = MutableLiveData<String>()
 
     val uploadLogsAvailable = MutableLiveData<Boolean>()
 
@@ -174,6 +182,9 @@ class HelpViewModel
             developerSettingsEnabled.postValue(corePreferences.showDeveloperSettings)
             checkUpdateAvailable.postValue(corePreferences.checkForUpdateServerUrl.isNotEmpty())
             uploadLogsAvailable.postValue(!core.logCollectionUploadServerUrl.isNullOrEmpty())
+            privacyUrl.postValue(SecureLinkAdmin.setting(core, "privacy_url"))
+            termsUrl.postValue(SecureLinkAdmin.setting(core, "terms_url"))
+            supportEmail.postValue(SecureLinkAdmin.setting(core, "support_email"))
         }
     }
 
@@ -188,6 +199,8 @@ class HelpViewModel
 
     @UiThread
     fun versionClicked() {
+        return // SecureLink: no hidden developer mode (as iOS)
+        @Suppress("UNREACHABLE_CODE")
         versionClickCount += 1
         Log.i("$TAG Version was clicked [$versionClickCount] times")
         when (versionClickCount) {

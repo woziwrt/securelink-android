@@ -977,4 +977,9 @@
     <string name="securelink_signout_message">Účet se odebere z tohoto telefonu. Na serveru zůstane – smazat ho můžete přes „Požádat o smazání účtu“.</string>
     <string name="securelink_deletion_notice_to_admin">🗑️ Požádal(a) jsem v aplikaci o smazání svého účtu. Žádost je zapsaná na serveru (securelink-check).</string>
     <string name="securelink_deletion_requested_on">O smazání požádáno %1$s – účet bude smazán do 7 dní</string>
+    <string name="securelink_terms">Podmínky používání</string>
+    <string name="securelink_privacy_policy">Zásady ochrany osobních údajů</string>
+    <string name="securelink_write_to_support">Napsat podpoře</string>
+    <string name="help_about_open_source_licenses_title">Licence</string>
+    <string name="help_about_open_source_licenses_subtitle">SecureLink © 2026 Petr Wozniak, šířeno pod licencí GNU GPL v3. S využitím Linphone © Belledonne Communications (GPL v3). Zdrojový kód: github.com/woziwrt/securelink-android</string>
 </resources>

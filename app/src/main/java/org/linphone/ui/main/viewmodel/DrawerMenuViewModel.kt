@@ -172,7 +172,7 @@ class DrawerMenuViewModel
     @WorkerThread
     fun checkIfKeepAliveServiceIsEnabled() {
         val useKeepAliveService = corePreferences.keepServiceAlive
-        hideQuitButton.postValue(!useKeepAliveService)
+        hideQuitButton.postValue(true) // SecureLink: quitting would stop calls from ringing
         if (useKeepAliveService) {
             Log.i("$TAG Keep alive service is enabled, do not hide quit button")
         }
@@ -206,7 +206,7 @@ class DrawerMenuViewModel
                 "$TAG Max number of allowed accounts reached [$maxAccount], hiding add account button"
             )
         }
-        hideAddAccount.postValue(maxAccountsReached)
+        hideAddAccount.postValue(true) // SecureLink: one account, from a QR code
     }
 
     @WorkerThread

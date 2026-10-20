@@ -410,7 +410,7 @@ class CorePreferences
 
     @get:AnyThread
     val hideSettings: Boolean
-        get() = config.getBool("ui", "hide_settings", false)
+        get() = true // SecureLink: everything comes from the server profile – no settings screen (as iOS)
 
     @get:AnyThread
     val hideAccountSettings: Boolean

@@ -21,6 +21,7 @@ package org.linphone.ui.main.help.fragment
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -76,24 +77,30 @@ class HelpFragment : GenericMainFragment() {
             }
         }
 
+        // SecureLink (as iOS): no Belledonne links – the "user guide" row is our terms of use, the "translate" row writes
+        // to support; privacy, terms and support address come from the server profile
         binding.setUserGuideClickListener {
-            val url = getString(R.string.website_user_guide_url)
-            openUrlInBrowser(url)
+            openUrlInBrowser(viewModel.termsUrl.value.orEmpty())
         }
 
         binding.setPrivacyPolicyClickListener {
-            val url = getString(R.string.website_privacy_policy_url)
-            openUrlInBrowser(url)
+            openUrlInBrowser(viewModel.privacyUrl.value.orEmpty())
         }
 
         binding.setLicensesClickListener {
-            val url = getString(R.string.website_open_source_licences_usage_url)
-            openUrlInBrowser(url)
+            // GPLv3: the source of this app is public
+            openUrlInBrowser(getString(R.string.securelink_source_url))
         }
 
         binding.setTranslateClickListener {
-            val url = getString(R.string.website_translate_weblate_url)
-            openUrlInBrowser(url)
+            val email = viewModel.supportEmail.value.orEmpty()
+            if (email.isNotEmpty()) {
+                try {
+                    startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email?subject=SecureLink")))
+                } catch (e: Exception) {
+                    Log.e("$TAG No e-mail app: $e")
+                }
+            }
         }
 
         viewModel.newVersionAvailableEvent.observe(viewLifecycleOwner) {
