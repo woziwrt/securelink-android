@@ -537,6 +537,9 @@ class SendMessageInConversationViewModel
 
     @UiThread
     fun startVoiceMessageRecording() {
+        // SecureLink: no voice messages (as iOS) – the button is gone, nothing else may start a recording
+        Log.w("$TAG Voice messages are disabled")
+        return
         if (ActivityCompat.checkSelfPermission(
                 coreContext.context,
                 Manifest.permission.RECORD_AUDIO

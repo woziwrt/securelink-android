@@ -553,6 +553,13 @@ class ConversationViewModel
 
                 val history = chatRoom.getHistoryRangeEvents(totalItemsCount, upperBound)
                 val list = getEventsListFromHistory(history)
+                // SecureLink: in a brand-new conversation the first sent message is added as "sent" and then comes
+                // back with this first history page – it was shown twice. Skip messages already in the list.
+                val knownIds = eventsList.mapNotNull { it.eventLog.chatMessage?.messageId }.toHashSet()
+                list.removeAll { model ->
+                    val id = model.eventLog.chatMessage?.messageId
+                    id != null && knownIds.contains(id)
+                }
 
                 val lastEvent = list.lastOrNull()
                 val newEvent = eventsList.firstOrNull()
