@@ -310,28 +310,17 @@ class LinphoneUtils {
             Log.w(
                 "$TAG Call error reason is [${errorInfo.reason}](${errorInfo.protocolCode}): ${errorInfo.phrase}"
             )
+            // SecureLink (as iOS): the caller is told why the call did not happen, in words, never a SIP code.
+            // The server answers 408 both for a phone that is off and for one that rang with nobody answering.
+            val rang = coreContext.secureLinkCallRang(call)
             return when (errorInfo.reason) {
-                Reason.Busy -> {
-                    AppUtils.getString(R.string.call_error_user_busy_toast)
-                }
-                Reason.IOError -> {
-                    AppUtils.getString(R.string.call_error_io_error_toast)
-                }
-                Reason.NotAcceptable -> {
-                    AppUtils.getString(R.string.call_error_incompatible_media_params_toast)
-                }
-                Reason.NotFound -> {
-                    AppUtils.getString(R.string.call_error_user_not_found_toast)
-                }
-                Reason.ServerTimeout -> {
-                    AppUtils.getString(R.string.call_error_server_timeout_toast)
-                }
-                Reason.TemporarilyUnavailable -> {
-                    AppUtils.getString(R.string.call_error_temporarily_unavailable_toast)
-                }
-                else -> {
-                    "${errorInfo.protocolCode} / ${errorInfo.phrase}"
-                }
+                Reason.NotAnswered, Reason.TemporarilyUnavailable, Reason.IOError -> AppUtils.getString(
+                    if (rang) R.string.securelink_call_not_answered else R.string.securelink_call_unavailable
+                )
+                Reason.NotFound -> AppUtils.getString(R.string.securelink_call_unavailable) // nobody signed in there
+                Reason.Busy -> AppUtils.getString(R.string.securelink_call_busy)
+                Reason.None, Reason.Declined -> "" // hung up by the caller, or turned down by the other side
+                else -> AppUtils.getString(R.string.securelink_call_failed)
             }
         }
 

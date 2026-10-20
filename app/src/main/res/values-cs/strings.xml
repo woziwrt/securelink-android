@@ -963,4 +963,9 @@
     <string name="securelink_lock_continue">Pokračovat bez ochrany</string>
     <string name="securelink_lock_no_screen_lock">Tento telefon nemá nastavený zámek obrazovky. Bez něj si vaše konverzace přečte každý, kdo ho vezme do ruky. Zámek nastavíte v Nastavení → Zabezpečení → Zámek obrazovky.</string>
     <string name="securelink_attachment_not_cleaned">Ze souboru nešlo odstranit polohu a údaje o přístroji, proto nebyl přiložen.</string>
+    <string name="securelink_call_unavailable">Nedostupný – telefon je vypnutý nebo bez signálu</string>
+    <string name="securelink_call_not_answered">Nepřijato</string>
+    <string name="securelink_call_busy">Obsazeno</string>
+    <string name="securelink_call_failed">Hovor se nepodařil – zkuste to prosím znovu</string>
+    <string name="securelink_call_did_not_connect">Hovor se nespojil</string>
 </resources>

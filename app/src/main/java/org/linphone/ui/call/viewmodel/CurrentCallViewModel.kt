@@ -162,6 +162,9 @@ class CurrentCallViewModel
 
     var terminatedByUser = false
 
+    // SecureLink: the call never connected (unavailable, busy, not answered) – nobody "ended" it
+    var callFailed = false
+
     val isRemoteRecordingEvent: MutableLiveData<Event<Pair<Boolean, String>>> by lazy {
         MutableLiveData()
     }
@@ -1088,6 +1091,7 @@ class CurrentCallViewModel
         contact.value?.destroy()
 
         terminatedByUser = false
+        callFailed = false
         currentCall = call
         callStatsModel.update(call, call.audioStats)
         callMediaEncryptionModel.update(call)
@@ -1546,6 +1550,7 @@ class CurrentCallViewModel
                 updateCallDuration()
 
                 // Show that call was ended for a few seconds, then leave
+                callFailed = call.state == Call.State.Error
                 val text = if (call.state == Call.State.Error) {
                     LinphoneUtils.getCallErrorInfoToast(call)
                 } else {

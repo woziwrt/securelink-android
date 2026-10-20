@@ -1092,4 +1092,9 @@
     <string name="securelink_lock_continue">Continue without protection</string>
     <string name="securelink_lock_no_screen_lock">This phone has no screen lock. Without it, anyone who picks it up can read your conversations. Set it in Settings → Security → Screen lock.</string>
     <string name="securelink_attachment_not_cleaned">The file could not be cleaned of location and device data, so it was not attached.</string>
+    <string name="securelink_call_unavailable">Unavailable – the phone is off or has no signal</string>
+    <string name="securelink_call_not_answered">Not answered</string>
+    <string name="securelink_call_busy">Busy</string>
+    <string name="securelink_call_failed">The call did not go through – please try again</string>
+    <string name="securelink_call_did_not_connect">The call did not connect</string>
 </resources>

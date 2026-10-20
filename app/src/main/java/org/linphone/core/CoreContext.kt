@@ -204,6 +204,14 @@ class CoreContext
 
     private var previousCallState = Call.State.Idle
 
+    // SecureLink: outgoing calls that reached the other phone (Ringing / EarlyMedia) – "not answered" vs "unavailable"
+    private val secureLinkRangCallIds = HashSet<String>()
+
+    @WorkerThread
+    fun secureLinkCallRang(call: Call): Boolean {
+        return secureLinkRangCallIds.contains(call.callLog.callId.orEmpty())
+    }
+
     private val coreListener = object : CoreListenerStub() {
         @WorkerThread
         override fun onDefaultAccountChanged(core: Core, account: Account?) {
@@ -402,6 +410,7 @@ class CoreContext
                     }
                 }
                 Call.State.OutgoingRinging, Call.State.OutgoingEarlyMedia -> {
+                    secureLinkRangCallIds.add(call.callLog.callId.orEmpty())
                     if (corePreferences.routeAudioToBluetoothWhenPossible) {
                         Log.i("$TAG Trying to route audio to either bluetooth, hearing aid, headphones or headset if available")
                         AudioUtils.routeAudioToAnyConnectedAudioDeviceOtherThanEarpieceAndSpeaker(call)
@@ -455,9 +464,14 @@ class CoreContext
                         "$TAG Call error reason is [${errorInfo.reason}](${errorInfo.protocolCode}): ${errorInfo.phrase}"
                     )
                     val text = LinphoneUtils.getCallErrorInfoToast(call)
-                    showFormattedRedToastEvent.postValue(
-                        Event(Pair(text, org.linphone.R.drawable.warning_circle))
-                    )
+                    if (text.isNotEmpty()) { // SecureLink: nothing when the other side turned the call down (as iOS)
+                        showFormattedRedToastEvent.postValue(
+                            Event(Pair(text, org.linphone.R.drawable.warning_circle))
+                        )
+                    }
+                }
+                Call.State.Released -> {
+                    secureLinkRangCallIds.remove(call.callLog.callId.orEmpty())
                 }
                 else -> {
                 }
