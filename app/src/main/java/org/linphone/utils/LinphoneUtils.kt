@@ -27,6 +27,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.Patterns
 import androidx.core.net.toUri
+import org.linphone.BuildConfig
 import androidx.annotation.AnyThread
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntegerRes
@@ -84,7 +85,9 @@ class LinphoneUtils {
         fun isAllowedProvisioning(url: String): Boolean {
             val parsed = url.toUri()
             val host = parsed.host?.lowercase() ?: return false
-            return parsed.scheme == "https" && (host == "securelink.cc" || host.endsWith(".securelink.cc"))
+            // debug builds only: the lab VM has no DNS name (instalator/vm.conf CLIENT_HOST)
+            val labHost = BuildConfig.DEBUG && host == "10.33.1.111"
+            return parsed.scheme == "https" && (host == "securelink.cc" || host.endsWith(".securelink.cc") || labHost)
         }
 
         @AnyThread
