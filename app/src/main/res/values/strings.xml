@@ -1072,4 +1072,8 @@
     <!-- SecureLink -->
     <string name="securelink_landing_intro">Communication only within your circle.\nYour administrator gives you your account as a QR code.</string>
     <string name="securelink_landing_nothing_else">There is nothing else to set up.</string>
+    <string name="securelink_sas_message">Read the security word to each other. It must be the same on both phones.</string>
+    <string name="securelink_sas_message_new_device">The other person has a new device. Read the security word to each other and confirm that it matches.</string>
+    <string name="securelink_sas_it_matches">It matches</string>
+    <string name="securelink_sas_no_match">No match</string>
 </resources>

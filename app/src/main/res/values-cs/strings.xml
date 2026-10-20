@@ -943,4 +943,8 @@
     <!-- SecureLink -->
     <string name="securelink_landing_intro">Komunikace jen uvnitř okruhu.\nÚčet dostanete od správce jako QR kód.</string>
     <string name="securelink_landing_nothing_else">Nic dalšího nastavovat nemusíte.</string>
+    <string name="securelink_sas_message">Řekněte si navzájem bezpečnostní slovo. Musí být na obou telefonech stejné.</string>
+    <string name="securelink_sas_message_new_device">Druhá strana má nové zařízení. Řekněte si navzájem bezpečnostní slovo a potvrďte, že souhlasí.</string>
+    <string name="securelink_sas_it_matches">Souhlasí</string>
+    <string name="securelink_sas_no_match">Nesouhlasí</string>
 </resources>

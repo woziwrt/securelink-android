@@ -655,6 +655,18 @@ class CurrentCallViewModel
         }
     }
 
+    // SecureLink: the user confirmed that the whole security word matches on both phones
+    @UiThread
+    fun confirmZrtpSas() {
+        coreContext.postOnCoreThread {
+            if (::currentCall.isInitialized) {
+                Log.i("$TAG SecureLink: security word confirmed by the user")
+                currentCall.authenticationTokenVerified = true
+                updateEncryption()
+            }
+        }
+    }
+
     @UiThread
     fun updateZrtpSas(authTokenClicked: String) {
         coreContext.postOnCoreThread {
@@ -1001,7 +1013,7 @@ class CurrentCallViewModel
                 Log.i(
                     "$TAG Current call media encryption is ZRTP, auth token is [${if (isDeviceTrusted) "trusted" else "not trusted yet"}]"
                 )
-                val tokenToRead = currentCall.localAuthenticationToken
+                val tokenToRead = currentCall.authenticationToken?.uppercase()
                 val tokensToDisplay = currentCall.remoteAuthenticationTokens.toList()
                 if (!tokenToRead.isNullOrEmpty() && tokensToDisplay.size == 4) {
                     val event = Event(Pair(tokenToRead, tokensToDisplay))
@@ -1037,7 +1049,7 @@ class CurrentCallViewModel
                 isZrtpSasValidationRequired.postValue(cacheMismatch || !isDeviceTrusted)
                 if (cacheMismatch || !isDeviceTrusted) {
                     Log.i("$TAG Showing ZRTP SAS confirmation dialog")
-                    val tokenToRead = currentCall.localAuthenticationToken
+                    val tokenToRead = currentCall.authenticationToken?.uppercase()
                     val tokensToDisplay = currentCall.remoteAuthenticationTokens.toList()
                     if (!tokenToRead.isNullOrEmpty() && tokensToDisplay.size == 4) {
                         val event = Event(Pair(tokenToRead, tokensToDisplay))

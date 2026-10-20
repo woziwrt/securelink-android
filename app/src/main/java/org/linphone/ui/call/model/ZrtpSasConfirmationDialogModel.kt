@@ -46,6 +46,8 @@ class ZrtpSasConfirmationDialogModel
 
     val skipEvent = MutableLiveData<Event<Boolean>>()
 
+    val matchesEvent = MutableLiveData<Event<Boolean>>()
+
     init {
         localToken.value = authTokenToRead
         letters1.value = authTokensToListen[0]
@@ -57,6 +59,13 @@ class ZrtpSasConfirmationDialogModel
     @UiThread
     fun skip() {
         skipEvent.value = Event(true)
+    }
+
+    // SecureLink: both people read the whole word to each other and confirm it (as iOS)
+    @UiThread
+    fun matches() {
+        Log.i("$TAG User confirmed that the security word matches")
+        matchesEvent.value = Event(true)
     }
 
     @UiThread

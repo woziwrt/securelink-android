@@ -471,6 +471,14 @@ class ActiveCallFragment : GenericCallFragment() {
             }
         }
 
+        model.matchesEvent.observe(viewLifecycleOwner) { event ->
+            event.consume {
+                callViewModel.confirmZrtpSas()
+                dialog.dismiss()
+                callViewModel.isZrtpDialogVisible = false
+            }
+        }
+
         dialog.show()
         zrtpSasDialog = dialog
         callViewModel.isZrtpDialogVisible = true

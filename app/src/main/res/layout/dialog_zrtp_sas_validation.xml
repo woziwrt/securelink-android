@@ -53,6 +53,7 @@
             <androidx.appcompat.widget.AppCompatTextView
                 style="@style/default_text_style_600"
                 android:id="@+id/skip"
+                android:visibility="gone"
                 android:onClick="@{() -> viewModel.skip()}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -85,7 +86,7 @@
                 android:layout_marginStart="15dp"
                 android:layout_marginEnd="15dp"
                 android:layout_marginTop="10dp"
-                android:text="@{viewModel.cacheMismatch ? @string/call_dialog_zrtp_validate_trust_warning_message : @string/call_dialog_zrtp_validate_trust_message, default=@string/call_dialog_zrtp_validate_trust_message}"
+                android:text="@{viewModel.cacheMismatch ? @string/securelink_sas_message_new_device : @string/securelink_sas_message, default=@string/securelink_sas_message}"
                 android:textSize="14sp"
                 android:textColor="@color/gray_main2_600"
                 android:gravity="center"
@@ -96,6 +97,7 @@
             <androidx.appcompat.widget.AppCompatTextView
                 style="@style/default_text_style"
                 android:id="@+id/local_code_label"
+                android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -109,18 +111,20 @@
             <androidx.appcompat.widget.AppCompatTextView
                 style="@style/default_text_style_700"
                 android:id="@+id/local_code_value"
+                android:layout_marginTop="18dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@{viewModel.localToken, default=`ZZ`}"
-                android:textSize="32sp"
-                android:textColor="@color/gray_main2_600"
+                android:textSize="44sp"
+                android:textColor="?attr/color_main1_500"
                 android:includeFontPadding="false"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/local_code_label" />
+                app:layout_constraintTop_toBottomOf="@id/message" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/remote_tokens"
+                android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -226,6 +230,29 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- SecureLink: one security word for both sides, "It matches" / "No match" – no four-letter guessing game (as iOS) -->
+            <androidx.appcompat.widget.AppCompatTextView
+                android:onClick="@{() -> viewModel.matches()}"
+                style="@style/primary_button_label_style"
+                android:id="@+id/it_matches"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="12dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="15dp"
+                android:paddingBottom="@dimen/primary_secondary_buttons_label_padding"
+                android:paddingTop="@dimen/primary_secondary_buttons_label_padding"
+                android:gravity="center"
+                android:background="@drawable/squircle_green_button_background"
+                android:text="@string/securelink_sas_it_matches"
+                android:textSize="13sp"
+                android:maxLines="1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/nothing_matches"
+                app:layout_constraintTop_toBottomOf="@id/local_code_value"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:onClick="@{() -> viewModel.notFound()}"
                 style="@style/default_text_style_600"
@@ -234,14 +261,14 @@
                 android:layout_height="wrap_content"
                 android:paddingStart="15dp"
                 android:paddingEnd="15dp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="18dp"
                 android:layout_marginBottom="15dp"
                 android:layout_marginEnd="16dp"
                 android:paddingBottom="@dimen/primary_secondary_buttons_label_padding"
                 android:paddingTop="@dimen/primary_secondary_buttons_label_padding"
                 android:gravity="center"
                 android:background="@drawable/squircle_red_outlined_button_background"
-                android:text="@string/call_dialog_zrtp_validate_trust_letters_do_not_match"
+                android:text="@string/securelink_sas_no_match"
                 android:textSize="13sp"
                 android:textColor="@color/danger_500"
                 android:maxLines="1"
@@ -249,7 +276,7 @@
                 app:layout_constraintWidth_max="@dimen/button_max_width"
                 app:layout_constrainedWidth="true"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/remote_tokens"
+                app:layout_constraintTop_toBottomOf="@id/local_code_value"
                 app:layout_constraintBottom_toBottomOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
