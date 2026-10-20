@@ -462,6 +462,7 @@ class MainActivity : GenericActivity() {
     }
 
     override fun onPause() {
+        window.decorView.removeCallbacks(directoryRefresh)
         viewModel.enableAccountMonitoring(false)
 
         currentlyDisplayedAuthDialog?.dismiss()
@@ -510,6 +511,16 @@ class MainActivity : GenericActivity() {
         viewModel.updateAccountsAndNetworkReachability()
         showTermsAfterLogin()
         askPermissionsAfterLogin()
+        // SecureLink: the directory is fresh on every foreground and every 5 minutes while the app is open (as iOS)
+        directoryRefresh.run()
+    }
+
+    private val directoryRefresh = object : Runnable {
+        override fun run() {
+            coreContext.postOnCoreThread { core -> coreContext.contactsManager.refreshDirectoryIfStale(core) }
+            window.decorView.removeCallbacks(this)
+            window.decorView.postDelayed(this, 5 * 60_000L)
+        }
     }
 
     // SecureLink: terms of use (18+, no objectionable content, reports within 24 h) accepted once after login (as iOS)

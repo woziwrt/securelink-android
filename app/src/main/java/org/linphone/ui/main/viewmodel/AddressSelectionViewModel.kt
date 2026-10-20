@@ -151,6 +151,7 @@ abstract class AddressSelectionViewModel
         isEmpty.value = true
 
         coreContext.postOnCoreThread { core ->
+            coreContext.contactsManager.refreshDirectoryIfStale(core) // SecureLink: pick from today's directory
             coreContext.contactsManager.addListener(contactsListener)
             magicSearch = core.createMagicSearch()
             magicSearch.limitedSearch = true

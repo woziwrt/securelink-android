@@ -286,6 +286,7 @@ class ContactsListFragment : AbstractMainFragment() {
         super.onResume()
 
         coreContext.postOnCoreThread { core ->
+            coreContext.contactsManager.refreshDirectoryIfStale(core) // SecureLink: pick from today's directory
             val cardDavFriendList = core.friendsLists.find {
                 it.type == FriendList.Type.CardDAV
             }

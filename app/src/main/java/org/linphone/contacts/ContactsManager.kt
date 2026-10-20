@@ -622,6 +622,26 @@ class ContactsManager
         }
     }
 
+    // SecureLink (as iOS): a change in the directory (new member, someone's first sign-in or sign-out) showed only after
+    // a restart. Refresh whenever contacts are about to be used and every 5 minutes while the app is open; at most once
+    // per 20 s – the directory is a few lines, the server does not feel it.
+    private var lastDirectoryRefresh = 0L
+
+    @WorkerThread
+    fun refreshDirectoryIfStale(core: Core) {
+        val now = System.currentTimeMillis()
+        if (now - lastDirectoryRefresh < 20_000L) return
+        lastDirectoryRefresh = now
+        for (list in core.friendsLists) {
+            if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
+                Log.i("$TAG SecureLink: refreshing the server directory [${list.displayName}]")
+                list.removeListener(friendListListener) // never twice, a list from provisioning may have none yet
+                list.addListener(friendListListener)
+                list.synchronizeFriendsFromServer()
+            }
+        }
+    }
+
     @WorkerThread
     fun onCoreStopped(core: Core) {
         Log.w("$TAG Core has been stopped")
