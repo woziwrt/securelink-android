@@ -236,6 +236,8 @@ class CoreContext
                 if (message != null && SecureLinkAdmin.isBlockedMessage(core, message)) {
                     Log.i("$TAG Dropping a message from a contact blocked on this phone")
                     chatRoom.deleteMessage(message)
+                } else if (message != null) {
+                    downloadToPrivateStorage(message)
                 }
             }
             if (corePreferences.makePublicMediaFilesDownloaded && core.maxSizeForAutoDownloadIncomingFiles >= 0) {
@@ -278,6 +280,12 @@ class CoreContext
                 onCoreStarted()
                 SecureLinkAdmin.enforceEncryptedMessaging(core)
                 SecureLinkAdmin.enforceDisappearing(core)
+                // SecureLink: a message that disappears (or is deleted) takes its attachment file with it – the SDK
+                // keeps the files by default ([chat] delete_contents=0), as iOS
+                core.config.setInt("chat", "delete_contents", 1)
+                // SecureLink: the SDK's own auto-download always writes to the shared "Android/data" folder (Android
+                // platform helper ignores Factory.setDownloadDir) – the app downloads itself, to its private storage
+                core.maxSizeForAutoDownloadIncomingFiles = -1
             } else if (state == GlobalState.Shutdown) {
                 onCoreStopped()
             }
@@ -1042,6 +1050,19 @@ class CoreContext
         params?.isVideoEnabled = true
         params?.videoDirection = MediaDirection.SendRecv
         startCall(address, params, forceZRTP, localAddress, skipNetworkReachabilityTest)
+    }
+
+    /** SecureLink: a received attachment is downloaded at once into the app's private storage (see onGlobalStateChanged) */
+    @WorkerThread
+    private fun downloadToPrivateStorage(message: ChatMessage) {
+        for (content in message.contents) {
+            if (!content.isFileTransfer || !content.filePath.isNullOrEmpty()) continue
+            val name = content.name ?: continue
+            val file = FileUtils.getFileStoragePath(name, FileUtils.isExtensionImage(name))
+            content.filePath = file.path
+            Log.i("$TAG Downloading [$name] into the app's private storage")
+            message.downloadContent(content)
+        }
     }
 
     @WorkerThread

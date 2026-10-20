@@ -74,6 +74,9 @@ import org.linphone.utils.AppUtils
 
 @UiThread
 class CallActivity : GenericActivity() {
+    // SecureLink: a call is never hidden behind the app lock (as iOS)
+    override val appLockExempt = true
+
     companion object {
         private const val TAG = "[Call Activity]"
     }

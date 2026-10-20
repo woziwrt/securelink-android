@@ -493,7 +493,9 @@ class FileUtils {
         @AnyThread
         fun getFileStorageDir(isPicture: Boolean = false, isRecording: Boolean = false): File {
             var path: File? = null
-            if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
+            // SecureLink: attachments (sent and received) stay in the app's private storage – the "external" app folder
+            // is readable over USB on some phones
+            if (false && Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
                 Log.w("$TAG External storage is mounted")
                 var directory = Environment.DIRECTORY_DOWNLOADS
                 if (isPicture) {

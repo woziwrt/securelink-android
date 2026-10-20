@@ -1086,4 +1086,10 @@
     <string name="securelink_contact_blocked_toast">Contact blocked: their calls and messages no longer reach you, and the administrator has been notified.</string>
     <string name="securelink_contact_unblocked_toast">Contact unblocked</string>
     <string name="securelink_contact_is_blocked_toast">This contact is blocked. To call or write to them, unblock them on their contact card.</string>
+    <string name="securelink_lock_locked">Locked</string>
+    <string name="securelink_lock_unlock">Unlock</string>
+    <string name="securelink_lock_prompt_title">Unlock SecureLink</string>
+    <string name="securelink_lock_continue">Continue without protection</string>
+    <string name="securelink_lock_no_screen_lock">This phone has no screen lock. Without it, anyone who picks it up can read your conversations. Set it in Settings → Security → Screen lock.</string>
+    <string name="securelink_attachment_not_cleaned">The file could not be cleaned of location and device data, so it was not attached.</string>
 </resources>

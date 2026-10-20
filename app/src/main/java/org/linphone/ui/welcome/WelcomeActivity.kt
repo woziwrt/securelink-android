@@ -43,6 +43,9 @@ import org.linphone.ui.welcome.fragment.WelcomePage3Fragment
 import org.linphone.utils.AppUtils
 
 class WelcomeActivity : GenericActivity() {
+    // SecureLink: first start: nothing to protect yet
+    override val appLockExempt = true
+
     companion object {
         private const val TAG = "[Welcome Activity]"
         private const val PAGES = 3

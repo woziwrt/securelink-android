@@ -31,11 +31,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.media.AudioFocusRequestCompat
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
@@ -57,6 +59,7 @@ import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkPrivacy
 
 class SendMessageInConversationViewModel
     @UiThread
@@ -456,6 +459,25 @@ class SendMessageInConversationViewModel
 
     @UiThread
     fun addAttachments(files: ArrayList<String>) {
+        // SecureLink: photos and videos leave without location, time and device data; what cannot be cleaned is
+        // not attached (as iOS)
+        viewModelScope.launch {
+            val cleaned = arrayListOf<String>()
+            for (file in files) {
+                val clean = withContext(Dispatchers.IO) { SecureLinkPrivacy.stripMetadata(file) }
+                if (clean != null) {
+                    cleaned.add(clean)
+                } else {
+                    showRedToast(R.string.securelink_attachment_not_cleaned, R.drawable.warning_circle)
+                    withContext(Dispatchers.IO) { FileUtils.deleteFile(file) }
+                }
+            }
+            addCleanAttachments(cleaned)
+        }
+    }
+
+    @UiThread
+    private fun addCleanAttachments(files: ArrayList<String>) {
         val list = arrayListOf<FileModel>()
         list.addAll(attachments.value.orEmpty())
 

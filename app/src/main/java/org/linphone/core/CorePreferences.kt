@@ -223,7 +223,7 @@ class CorePreferences
     @get:AnyThread @set:WorkerThread
     var makePublicMediaFilesDownloaded: Boolean
         // Keep old name for backward compatibility
-        get() = config.getBool("app", "make_downloaded_images_public_in_gallery", false)
+        get() = false // SecureLink: received photos never go to the phone's public gallery, whatever a profile says
         set(value) {
             config.setBool("app", "make_downloaded_images_public_in_gallery", value)
         }

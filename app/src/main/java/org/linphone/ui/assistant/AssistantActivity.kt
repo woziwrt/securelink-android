@@ -42,6 +42,9 @@ import org.linphone.ui.GenericActivity
 
 @UiThread
 class AssistantActivity : GenericActivity() {
+    // SecureLink: first login: nothing to protect yet
+    override val appLockExempt = true
+
     companion object {
         private const val TAG = "[Assistant Activity]"
 

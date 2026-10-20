@@ -20,6 +20,7 @@
 package org.linphone.ui
 
 import android.annotation.SuppressLint
+import android.app.KeyguardManager
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.Configuration
@@ -30,8 +31,11 @@ import android.provider.Settings
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.annotation.DrawableRes
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -52,6 +56,71 @@ open class GenericActivity : AppCompatActivity() {
     }
 
     private lateinit var toastsArea: ViewGroup
+
+    // SecureLink app lock: activities that never show it (a call, the first login before there is anything to protect)
+    protected open val appLockExempt = false
+
+    private val appLockIdleCheck = object : Runnable {
+        override fun run() {
+            val keyboardVisible = ViewCompat.getRootWindowInsets(window.decorView)
+                ?.isVisible(WindowInsetsCompat.Type.ime()) == true
+            if (AppLock.idleExpired() && !keyboardVisible) {
+                AppLock.lockNow()
+                AppLock.show(this@GenericActivity)
+            }
+            window.decorView.postDelayed(this, 15_000L)
+        }
+    }
+
+    // Android 9 has no BiometricPrompt with the device PIN: the system's own "confirm your PIN" screen
+    private var confirmCredentialCallback: ((Boolean) -> Unit)? = null
+    private val confirmCredentialLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        confirmCredentialCallback?.invoke(result.resultCode == RESULT_OK)
+        confirmCredentialCallback = null
+    }
+
+    fun confirmDeviceCredential(callback: (Boolean) -> Unit) {
+        val keyguard = getSystemService(KeyguardManager::class.java)
+
+        @Suppress("DEPRECATION")
+        val intent = keyguard?.createConfirmDeviceCredentialIntent(getString(R.string.securelink_lock_prompt_title), null)
+        if (intent == null) {
+            callback(false)
+            return
+        }
+        confirmCredentialCallback = callback
+        confirmCredentialLauncher.launch(intent)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        AppLock.activityStarted()
+    }
+
+    override fun onStop() {
+        AppLock.activityStopped()
+        super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (appLockExempt) return
+        if (AppLock.locked) AppLock.show(this) else AppLock.hide(this)
+        window.decorView.removeCallbacks(appLockIdleCheck)
+        window.decorView.postDelayed(appLockIdleCheck, 15_000L)
+    }
+
+    override fun onPause() {
+        window.decorView.removeCallbacks(appLockIdleCheck)
+        super.onPause()
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        AppLock.touched()
+    }
 
     private var mainColor: String = "orange"
 
