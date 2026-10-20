@@ -276,6 +276,15 @@ class CurrentCallViewModel
     private val contactsListener = object : ContactsListener {
         @WorkerThread
         override fun onContactsLoaded() {
+            // SecureLink: a call started while the server directory was being refreshed (opening the app or the
+            // contacts refreshes it) showed the number for the whole call – look the name up again once it is back
+            if (!::currentCall.isInitialized || currentCall.conference != null) return
+            val address = currentCall.callLog.remoteAddress
+            val friend = coreContext.contactsManager.findContactByAddress(address) ?: return
+            if (displayedName.value == friend.name) return
+            Log.i("$TAG Directory reloaded, updating current call contact to [${friend.name}]")
+            displayedName.postValue(friend.name)
+            contact.postValue(ContactAvatarModel(friend, address))
         }
 
         @WorkerThread
