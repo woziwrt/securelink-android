@@ -36,10 +36,12 @@ import org.linphone.core.AccountManagerServicesRequest
 import org.linphone.core.AccountManagerServicesRequestListenerStub
 import org.linphone.core.Address
 import org.linphone.core.Core
+import org.linphone.core.CoreListenerStub
 import org.linphone.core.DialPlan
 import org.linphone.core.Dictionary
 import org.linphone.core.Factory
 import org.linphone.core.FriendList
+import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
 import org.linphone.ui.main.model.AccountModel
@@ -289,8 +291,10 @@ class AccountProfileViewModel
                 core.removeAccountWithData(account)
                 if (wasLastAccount) {
                     // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
-                    // directory people may survive – a new QR must not list the previous account's contacts
-                    core.clearAllAuthInfo()
+                    // directory people may survive – a new QR must not list the previous account's contacts.
+                    // The credentials go only once the unregister is done: removed at once, the unregister got no
+                    // answer to the server's challenge and the server kept the phone as signed in (as iOS c2abdd7c8).
+                    clearAuthInfoAfterUnregister(core)
                     core.config.cleanEntry("misc", "contacts-vcard-list")
                     core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
                     core.config.sync()
@@ -322,6 +326,37 @@ class AccountProfileViewModel
         deletionRequestedOn.postValue(
             if (at > 0L) DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(at * 1000)) else ""
         )
+    }
+
+    @WorkerThread
+    private fun clearAuthInfoAfterUnregister(core: Core) {
+        var done = false
+        val clear = {
+            if (!done) {
+                done = true
+                core.clearAllAuthInfo()
+                Log.i("$TAG SecureLink: credentials removed after sign-out")
+            }
+        }
+        val listener = object : CoreListenerStub() {
+            override fun onAccountRegistrationStateChanged(
+                core: Core,
+                account: Account,
+                state: RegistrationState?,
+                message: String
+            ) {
+                if (state == RegistrationState.Cleared || state == RegistrationState.Failed) {
+                    core.removeListener(this)
+                    clear()
+                }
+            }
+        }
+        core.addListener(listener)
+        // never wait for ever: no network, or the server does not answer
+        coreContext.postOnCoreThreadDelayed({ c ->
+            c.removeListener(listener)
+            clear()
+        }, 10_000L)
     }
 
     @UiThread
