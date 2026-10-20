@@ -24,6 +24,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
@@ -38,6 +39,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
 import androidx.car.app.connection.CarConnection
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
@@ -69,7 +71,6 @@ import org.linphone.ui.main.chat.fragment.ConversationsListFragmentDirections
 import org.linphone.utils.PasswordDialogModel
 import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
-import org.linphone.ui.welcome.WelcomeActivity
 import org.linphone.utils.AppUtils
 import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
@@ -125,6 +126,15 @@ class MainActivity : GenericActivity() {
             Log.w("$TAG POST_NOTIFICATIONS permission has been denied!")
         }
     }
+
+    // SecureLink: microphone and notifications are asked once an account exists (no permissions page before login)
+    private val afterLoginPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        Log.i("$TAG Permissions asked after login: $results")
+        viewModel.updateMissingPermissionAlert()
+    }
+    private var afterLoginPermissionsAsked = false
 
     private val fullScreenIntentPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -400,17 +410,9 @@ class MainActivity : GenericActivity() {
         }
 
         coreContext.postOnCoreThread { core ->
-            if (corePreferences.firstLaunch) {
-                Log.i("$TAG First time Linphone 6.0 has been started, showing Welcome activity")
-                corePreferences.firstLaunch = false
-                coreContext.postOnMainThread {
-                    try {
-                        startActivity(Intent(this, WelcomeActivity::class.java))
-                    } catch (ise: IllegalStateException) {
-                        Log.e("$TAG Can't start activity: $ise")
-                    }
-                }
-            } else if (core.accountList.isEmpty()) {
+            // SecureLink: no welcome pages, the first screen is the assistant with the QR scanner
+            corePreferences.firstLaunch = false
+            if (core.accountList.isEmpty()) {
                 Log.w("$TAG No account found, showing Assistant activity")
                 coreContext.postOnMainThread {
                     try {
@@ -472,6 +474,28 @@ class MainActivity : GenericActivity() {
         viewModel.enableAccountMonitoring(true)
         viewModel.updateMissingPermissionAlert()
         viewModel.updateAccountsAndNetworkReachability()
+        askPermissionsAfterLogin()
+    }
+
+    private fun askPermissionsAfterLogin() {
+        if (afterLoginPermissionsAsked) return
+        coreContext.postOnCoreThread { core ->
+            if (core.accountList.isEmpty()) return@postOnCoreThread
+            coreContext.postOnMainThread {
+                val missing = arrayListOf(Manifest.permission.RECORD_AUDIO)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    missing.add(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                missing.removeAll {
+                    ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+                }
+                afterLoginPermissionsAsked = true
+                if (missing.isNotEmpty()) {
+                    Log.i("$TAG Asking for $missing after login")
+                    afterLoginPermissionsLauncher.launch(missing.toTypedArray())
+                }
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -19,10 +19,8 @@
  */
 package org.linphone.ui.main.contacts.fragment
 
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.view.Gravity
@@ -34,7 +32,6 @@ import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
@@ -275,14 +272,7 @@ class ContactsListFragment : AbstractMainFragment() {
             R.id.contactsListFragment
         )
 
-        if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.READ_CONTACTS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.w("$TAG READ_CONTACTS permission wasn't granted yet, asking for it now")
-            requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-        }
+        // SecureLink: never ask for the phone's address book, contacts come from the server directory only
     }
 
     override fun onPause() {

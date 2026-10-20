@@ -1069,4 +1069,7 @@
         <item>50e603d333c6049a37bd751375d08f3bd0abebd33facd30bd17b64b89658b421,
             com.google.android.apps.automotive.templates.host</item>
         </string-array>
+    <!-- SecureLink -->
+    <string name="securelink_landing_intro">Communication only within your circle.\nYour administrator gives you your account as a QR code.</string>
+    <string name="securelink_landing_nothing_else">There is nothing else to set up.</string>
 </resources>

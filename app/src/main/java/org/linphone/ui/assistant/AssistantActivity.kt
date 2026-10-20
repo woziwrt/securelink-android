@@ -39,7 +39,6 @@ import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
 import org.linphone.databinding.AssistantActivityBinding
 import org.linphone.ui.GenericActivity
-import org.linphone.ui.assistant.fragment.PermissionsFragmentDirections
 
 @UiThread
 class AssistantActivity : GenericActivity() {
@@ -92,11 +91,9 @@ class AssistantActivity : GenericActivity() {
         }
 
         (binding.root as? ViewGroup)?.doOnPreDraw {
-            if (!areAllPermissionsGranted()) {
-                Log.w("$TAG Not all required permissions are granted, showing Permissions fragment")
-                val action = PermissionsFragmentDirections.actionGlobalPermissionsFragment()
-                binding.assistantNavContainer.findNavController().navigate(action)
-            } else if (intent.getBooleanExtra(SKIP_LANDING_EXTRA, false)) {
+            // SecureLink: no permissions page – microphone and notifications are asked after login (MainActivity),
+            // the camera by the QR scanner itself
+            if (intent.getBooleanExtra(SKIP_LANDING_EXTRA, false)) {
                 Log.w(
                     "$TAG We were asked to leave assistant if at least an account is already configured"
                 )

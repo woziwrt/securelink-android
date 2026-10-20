@@ -10,8 +10,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <!-- To be able to display contacts list & match calling/called numbers -->
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- SecureLink: no READ_CONTACTS – contacts come only from the server directory, never from the phone's address book -->
 
     <!-- Starting Android 13 we need to ask notification permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>

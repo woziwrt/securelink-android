@@ -96,7 +96,6 @@ class Compatibility {
                 return Api33Compatibility.getAllRequiredPermissionsArray()
             }
             return arrayOf(
-                Manifest.permission.READ_CONTACTS,
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.CAMERA
             )
