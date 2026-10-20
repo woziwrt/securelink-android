@@ -177,6 +177,30 @@ class DialogUtils {
             return getDialog(context, binding)
         }
 
+        /** SecureLink: the same dialog with its own title, text and confirm button (account deletion request) */
+        @UiThread
+        fun getSecureLinkConfirmDialog(
+            context: Context,
+            viewModel: ConfirmationDialogModel,
+            title: String,
+            message: String,
+            confirm: String
+        ): Dialog {
+            val binding: DialogRemoveAccountBinding = DataBindingUtil.inflate(
+                LayoutInflater.from(context),
+                R.layout.dialog_remove_account,
+                null,
+                false
+            )
+            binding.viewModel = viewModel
+            binding.title.text = title
+            binding.message.text = message
+            binding.message.visibility = View.VISIBLE
+            binding.confirm.text = confirm
+
+            return getDialog(context, binding)
+        }
+
         @UiThread
         fun getConfirmTurningOnVfsDialog(
             context: Context,

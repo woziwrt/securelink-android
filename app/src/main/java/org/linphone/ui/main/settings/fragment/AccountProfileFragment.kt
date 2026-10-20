@@ -163,7 +163,7 @@ class AccountProfileFragment : GenericMainFragment() {
             val dialog = DialogUtils.getConfirmAccountRemovalDialog(
                 requireActivity(),
                 model,
-                viewModel.isOnDefaultDomain.value == true
+                true // SecureLink: always say the account stays on the server and where deletion is
             )
 
             model.dismissEvent.observe(viewLifecycleOwner) {
@@ -180,6 +180,39 @@ class AccountProfileFragment : GenericMainFragment() {
             }
 
             dialog.show()
+        }
+
+        // SecureLink: one tap sends a signed deletion request to the server (App Review 5.1.1(v), as iOS)
+        binding.setRequestDeletionClickListener {
+            val model = ConfirmationDialogModel()
+            val dialog = DialogUtils.getSecureLinkConfirmDialog(
+                requireActivity(),
+                model,
+                getString(R.string.securelink_request_deletion),
+                getString(R.string.securelink_request_deletion_message),
+                getString(R.string.securelink_request_deletion_confirm)
+            )
+            model.dismissEvent.observe(viewLifecycleOwner) {
+                it.consume { dialog.dismiss() }
+            }
+            model.confirmEvent.observe(viewLifecycleOwner) {
+                it.consume {
+                    viewModel.requestDeletion()
+                    dialog.dismiss()
+                }
+            }
+            dialog.show()
+        }
+
+        viewModel.deletionRequestedEvent.observe(viewLifecycleOwner) {
+            it.consume { sent ->
+                val activity = requireActivity() as GenericActivity
+                if (sent) {
+                    activity.showGreenToast(getString(R.string.securelink_deletion_requested_toast), R.drawable.check, 6000)
+                } else {
+                    activity.showRedToast(getString(R.string.securelink_deletion_request_failed_toast), R.drawable.warning_circle)
+                }
+            }
         }
 
         viewModel.accountRemovedEvent.observe(viewLifecycleOwner) {

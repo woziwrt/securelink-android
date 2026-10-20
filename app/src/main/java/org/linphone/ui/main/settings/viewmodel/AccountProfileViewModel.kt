@@ -23,6 +23,8 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import java.text.DateFormat
+import java.util.Date
 import java.util.Locale
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -33,15 +35,19 @@ import org.linphone.core.AccountManagerServices
 import org.linphone.core.AccountManagerServicesRequest
 import org.linphone.core.AccountManagerServicesRequestListenerStub
 import org.linphone.core.Address
+import org.linphone.core.Core
 import org.linphone.core.DialPlan
 import org.linphone.core.Dictionary
 import org.linphone.core.Factory
+import org.linphone.core.FriendList
 import org.linphone.core.tools.Log
 import org.linphone.ui.GenericViewModel
 import org.linphone.ui.main.model.AccountModel
 import org.linphone.ui.main.model.isEndToEndEncryptionMandatory
 import org.linphone.ui.main.settings.model.AccountDeviceModel
+import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
+import org.linphone.utils.SecureLinkAdmin
 
 class AccountProfileViewModel
     @UiThread
@@ -89,6 +95,13 @@ class AccountProfileViewModel
     val showDeviceId = MutableLiveData<Boolean>()
 
     val accountRemovedEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData()
+    }
+
+    // SecureLink: "Request account deletion" – empty until asked, then the date it was asked (as iOS)
+    val deletionRequestedOn = MutableLiveData<String>()
+
+    val deletionRequestedEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
 
@@ -175,8 +188,9 @@ class AccountProfileViewModel
             emptyDevices.value = list.orEmpty().isEmpty()
         }
 
-        coreContext.postOnCoreThread {
+        coreContext.postOnCoreThread { core ->
             hideAccountSettings.postValue(corePreferences.hideAccountSettings)
+            refreshDeletionRequested(core)
             hideSipAddresses.postValue(corePreferences.hideSipAddresses)
             dialPlansLabelList.add("") // To allow removing selected dial plan
 
@@ -213,7 +227,12 @@ class AccountProfileViewModel
                 registerEnabled.postValue(account.params.isRegisterEnabled)
 
                 sipAddress.postValue(account.params.identityAddress?.asStringUriOnly())
-                displayName.postValue(account.params.identityAddress?.displayName)
+                // SecureLink: the name others see comes from the administrator's directory (read-only here)
+                val identity = account.params.identityAddress
+                displayName.postValue(
+                    identity?.let { coreContext.contactsManager.findContactByAddress(it)?.name }
+                        ?: identity?.displayName ?: identity?.username
+                )
                 showDeviceId.postValue(false)
 
                 val identityAddress = account.params.identityAddress
@@ -266,7 +285,24 @@ class AccountProfileViewModel
             if (::account.isInitialized) {
                 val identity = account.params.identityAddress?.asStringUriOnly()
                 Log.w("$TAG Removing account [$identity] and all related data (auth info, conferences, conversations, call logs)")
+                val wasLastAccount = core.accountList.size <= 1 // the removal may complete later (unregister first)
                 core.removeAccountWithData(account)
+                if (wasLastAccount) {
+                    // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
+                    // directory people may survive – a new QR must not list the previous account's contacts
+                    core.clearAllAuthInfo()
+                    core.config.cleanEntry("misc", "contacts-vcard-list")
+                    core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
+                    core.config.sync()
+                    for (list in core.friendsLists) {
+                        if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
+                            core.removeFriendList(list)
+                        } else {
+                            for (friend in list.friends) list.removeFriend(friend)
+                        }
+                    }
+                    coreContext.contactsManager.notifyContactsListChanged()
+                }
                 accountRemovedEvent.postValue(Event(true))
 
                 if (core.accountList.isEmpty()) {
@@ -276,6 +312,34 @@ class AccountProfileViewModel
                         core.provisioningUri = null
                     }
                 }
+            }
+        }
+    }
+
+    @WorkerThread
+    private fun refreshDeletionRequested(core: Core) {
+        val at = SecureLinkAdmin.deletionRequestedAt(core)
+        deletionRequestedOn.postValue(
+            if (at > 0L) DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(at * 1000)) else ""
+        )
+    }
+
+    @UiThread
+    fun requestDeletion() {
+        coreContext.postOnCoreThread { core ->
+            SecureLinkAdmin.requestDeletion(core) { sent ->
+                if (sent) {
+                    refreshDeletionRequested(core)
+                    // the request itself is on the server; the administrator also learns about it on the phone
+                    SecureLinkAdmin.openAdminConversation(
+                        core,
+                        AppUtils.getString(R.string.securelink_deletion_notice_to_admin),
+                        { },
+                        { Log.e("$TAG Deletion notice to the administrator could not be sent") },
+                        sendNow = true
+                    )
+                }
+                deletionRequestedEvent.postValue(Event(sent))
             }
         }
     }

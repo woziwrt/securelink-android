@@ -7,8 +7,12 @@
 package org.linphone.utils
 
 import androidx.annotation.WorkerThread
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.MessageDigest
 import java.text.DateFormat
 import java.util.Date
+import java.util.UUID
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
 import org.linphone.core.Address
@@ -252,6 +256,93 @@ object SecureLinkAdmin {
             val draft = coreContext.context.getString(R.string.securelink_block_report_draft, name, key.removePrefix("sip:"))
             openAdminConversation(core, draft, { }, { Log.e("$TAG Block report could not be sent") }, sendNow = true)
         }
+    }
+
+    // --- account deletion (App Review 5.1.1(v), as iOS): one tap sends a signed request to the server ([app] request_url,
+    // HTTP digest SHA-256 with the SIP account – the same check as attachments); the administrator deletes within 7 days
+
+    private fun sha256(text: String): String {
+        return MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
+    }
+
+    /** RFC 7616 digest (SHA-256, qop=auth) answering [challenge] – the server is /opt/securelink/www/sl-auth.php */
+    fun digestAuthorization(challenge: String, user: String, ha1: String, uri: String, cnonce: String): String? {
+        val fields = Regex("(\\w+)=\"?([^\",]*)\"?").findAll(challenge).associate { it.groupValues[1] to it.groupValues[2] }
+        val realm = fields["realm"].orEmpty()
+        val nonce = fields["nonce"].orEmpty()
+        val opaque = fields["opaque"].orEmpty()
+        if (ha1.isEmpty() || nonce.isEmpty()) return null
+        val nc = "00000001"
+        val response = sha256("$ha1:$nonce:$nc:$cnonce:auth:" + sha256("POST:$uri"))
+        return "Digest username=\"$user\", realm=\"$realm\", nonce=\"$nonce\", uri=\"$uri\", " +
+            "algorithm=SHA-256, qop=auth, nc=$nc, cnonce=\"$cnonce\", response=\"$response\", opaque=\"$opaque\""
+    }
+
+    @WorkerThread
+    fun requestDeletion(core: Core, done: (Boolean) -> Unit) {
+        val link = setting(core, "request_url")
+        val auth = core.defaultAccount?.findAuthInfo()
+        val user = auth?.username.orEmpty()
+        if (link.isEmpty() || auth == null || user.isEmpty()) {
+            Log.e("$TAG Deletion request: no request_url or no credentials")
+            done(false)
+            return
+        }
+        val storedHa1 = if (auth.algorithm.orEmpty().uppercase() == "SHA-256") auth.ha1.orEmpty() else ""
+        val password = auth.password.orEmpty()
+        Thread {
+            val sent = try {
+                val url = URL(link)
+                var answer = postDeletion(url, null)
+                if (answer.first == 401 && answer.second != null) {
+                    val challenge = answer.second.orEmpty()
+                    val realm = Regex("realm=\"([^\"]*)\"").find(challenge)?.groupValues?.get(1).orEmpty()
+                    val ha1 = storedHa1.ifEmpty { if (password.isEmpty()) "" else sha256("$user:$realm:$password") }
+                    val cnonce = UUID.randomUUID().toString().replace("-", "")
+                    val header = digestAuthorization(challenge, user, ha1, url.path, cnonce)
+                    if (header != null) answer = postDeletion(url, header)
+                }
+                Log.i("$TAG Deletion request answered [${answer.first}]")
+                answer.first == 200
+            } catch (e: Exception) {
+                Log.e("$TAG Deletion request failed: $e")
+                false
+            }
+            coreContext.postOnCoreThread { c ->
+                if (sent) {
+                    Log.i("$TAG Account deletion requested")
+                    c.config.setInt("securelink", "deletion_requested_$user", (System.currentTimeMillis() / 1000).toInt())
+                } else {
+                    Log.e("$TAG Deletion request was not accepted")
+                }
+                done(sent)
+            }
+        }.start()
+    }
+
+    /** (HTTP status, WWW-Authenticate challenge) */
+    private fun postDeletion(url: URL, authorization: String?): Pair<Int, String?> {
+        val connection = url.openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "POST"
+            connection.connectTimeout = 30_000
+            connection.readTimeout = 30_000
+            connection.doOutput = true
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            if (authorization != null) connection.setRequestProperty("Authorization", authorization)
+            connection.outputStream.use { it.write("type=delete".toByteArray()) }
+            return Pair(connection.responseCode, connection.getHeaderField("WWW-Authenticate"))
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** When this account asked for its deletion (seconds since 1970), 0 = never – the button then says so (as iOS) */
+    @WorkerThread
+    fun deletionRequestedAt(core: Core): Long {
+        val user = core.defaultAccount?.findAuthInfo()?.username.orEmpty()
+        if (user.isEmpty()) return 0L
+        return core.config.getInt("securelink", "deletion_requested_$user", 0).toLong()
     }
 
     /** At every start: conversations others started (or older ones) get the 7 days too. */

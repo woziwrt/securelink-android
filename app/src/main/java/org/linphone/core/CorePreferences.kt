@@ -84,7 +84,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var checkForUpdateServerUrl: String
-        get() = config.getString("misc", "version_check_url_root", "").orEmpty()
+        get() = "" // SecureLink: no update check against Belledonne's releases (download.linphone.org)
         set(value) {
             config.setString("misc", "version_check_url_root", value)
         }
@@ -414,7 +414,7 @@ class CorePreferences
 
     @get:AnyThread
     val hideAccountSettings: Boolean
-        get() = config.getBool("ui", "hide_account_settings", false)
+        get() = true // SecureLink: transport, TURN, media encryption come from the server profile only (as iOS)
 
     @get:AnyThread
     val hideAdvancedSettings: Boolean

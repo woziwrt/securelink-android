@@ -717,7 +717,17 @@ class CoreContext
         val looper = Looper.myLooper() ?: return
         coreThread = Handler(looper)
 
-        core = Factory.instance().createCoreWithConfig(corePreferences.config, context)
+        val config = corePreferences.config
+        // SecureLink: settings arrive once, with the QR code (as iOS f3e35fa4a). Re-applying remote provisioning at every
+        // start prunes the stored auth_info first and resets the [app] section to whatever the server sends.
+        if (!config.getString("misc", "config-uri", "").isNullOrEmpty()) {
+            config.cleanEntry("misc", "config-uri")
+            Log.i("$TAG SecureLink: removed misc/config-uri – no provisioning re-fetch at start")
+        }
+        // SecureLink: logs never go to Belledonne's upload server (files.linphone.org), as iOS
+        config.setString("misc", "log_collection_upload_server_url", "")
+
+        core = Factory.instance().createCoreWithConfig(config, context)
         core.isAutoIterateEnabled = true
         // SecureLink: no video in v1 – a provisioning file cannot switch it back on
         core.isVideoCaptureEnabled = false
@@ -824,10 +834,7 @@ class CoreContext
                 }
             }
 
-            if (core.logCollectionUploadServerUrl.isNullOrEmpty()) {
-                Log.w("$TAG Logs sharing server URL not set, fixing that")
-                core.logCollectionUploadServerUrl = "https://files.linphone.org/http-file-transfer-server/hft.php"
-            }
+            // SecureLink: no logs sharing server – upstream put Belledonne's files.linphone.org here
 
             corePreferences.linphoneConfigurationVersion = currentVersion
             Log.w(

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SecureLink (as iOS): no own picture, display name and prefix from the administrator's directory, no switch that
+     stops the phone from ringing, no advanced account settings -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:bind="http://schemas.android.com/tools">
@@ -29,6 +31,9 @@
             type="View.OnClickListener" />
         <variable
             name="settingsClickListener"
+            type="View.OnClickListener" />
+        <variable
+            name="requestDeletionClickListener"
             type="View.OnClickListener" />
         <variable
             name="deleteAccountClickListener"
@@ -109,7 +114,7 @@
 
                         <include
                             android:id="@+id/avatar"
-                            android:onClick="@{pickImageClickListener}"
+                            android:clickable="false"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -123,6 +128,7 @@
                             android:onClick="@{pickImageClickListener}"
                             style="@style/default_text_style"
                             android:id="@+id/add_picture_label"
+                            android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -133,7 +139,6 @@
                             android:drawableStart="@drawable/camera"
                             android:drawablePadding="3dp"
                             android:background="@drawable/squircle_transparent_button_background"
-                            android:visibility="@{viewModel.accountModel.picturePath.length() == 0 ? View.VISIBLE : View.GONE, default=gone}"
                             app:layout_constraintTop_toBottomOf="@id/avatar"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
@@ -143,6 +148,7 @@
                             android:onClick="@{pickImageClickListener}"
                             style="@style/default_text_style"
                             android:id="@+id/edit_picture_label"
+                            android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -154,7 +160,6 @@
                             android:drawablePadding="3dp"
                             android:drawableTint="?attr/color_main2_600"
                             android:background="@drawable/squircle_transparent_button_background"
-                            android:visibility="@{viewModel.accountModel.picturePath.length() == 0 ? View.GONE : View.VISIBLE}"
                             app:layout_constraintHorizontal_chainStyle="packed"
                             app:layout_constraintTop_toBottomOf="@id/avatar"
                             app:layout_constraintBottom_toBottomOf="parent"
@@ -165,6 +170,7 @@
                             android:onClick="@{deleteImageClickListener}"
                             style="@style/default_text_style"
                             android:id="@+id/remove_picture_label"
+                            android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
@@ -177,7 +183,6 @@
                             android:drawablePadding="3dp"
                             android:drawableTint="?attr/color_main2_600"
                             android:background="@drawable/squircle_transparent_button_background"
-                            android:visibility="@{viewModel.accountModel.picturePath.length() == 0 ? View.GONE : View.VISIBLE}"
                             app:layout_constraintTop_toBottomOf="@id/avatar"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toEndOf="@id/edit_picture_label"
@@ -310,7 +315,9 @@
                             android:textSize="14sp"
                             android:maxLines="1"
                             android:background="@drawable/edit_text_background"
-                            android:inputType="text|textPersonName|textCapSentences"
+                            android:inputType="none"
+                            android:focusable="false"
+                            android:enabled="false"
                             app:layout_constraintHorizontal_bias="0"
                             app:layout_constraintTop_toBottomOf="@id/display_name_label"
                             app:layout_constraintStart_toStartOf="@id/display_name_label"
@@ -319,6 +326,7 @@
                         <androidx.appcompat.widget.AppCompatTextView
                             style="@style/settings_title_padding_style"
                             android:id="@+id/prefix_label"
+                            android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
@@ -330,6 +338,7 @@
 
                         <ImageView
                             android:id="@+id/prefix_label_tooltip"
+                            android:visibility="gone"
                             android:onClick="@{prefixTooltipClickListener}"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -344,6 +353,7 @@
                         <androidx.appcompat.widget.AppCompatSpinner
                             style="@style/default_text_style"
                             android:id="@+id/prefix"
+                            android:visibility="gone"
                             android:layout_width="0dp"
                             android:layout_height="50dp"
                             android:layout_marginEnd="16dp"
@@ -366,6 +376,7 @@
 
                         <ImageView
                             android:id="@+id/prefix_caret"
+                            android:visibility="gone"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="16dp"
@@ -408,6 +419,7 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             style="@style/material_switch_style"
                             android:id="@+id/connected_switch"
+                            android:visibility="gone"
                             android:onClick="@{() -> viewModel.toggleRegister()}"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -422,11 +434,11 @@
                             android:id="@+id/connected_label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginTop="10dp"
                             android:text="@{viewModel.accountModel.registrationStateLabel, default=@string/drawer_menu_account_connection_status_connected}"
-                            app:layout_constraintStart_toEndOf="@id/connected_switch"
-                            app:layout_constraintTop_toTopOf="@id/connected_switch"
-                            app:layout_constraintBottom_toBottomOf="@id/connected_switch" />
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
 
                         <ImageView
                             android:id="@+id/register_in_progress"
@@ -559,6 +571,24 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"/>
 
+                    <!-- SecureLink: deletion is requested in the app (App Review 5.1.1(v)); after that the date it was asked -->
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:onClick="@{requestDeletionClickListener}"
+                        android:enabled="@{viewModel.deletionRequestedOn.length() == 0}"
+                        style="@style/context_menu_action_label_style"
+                        android:id="@+id/action_request_deletion"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@drawable/action_background_middle"
+                        android:text="@{viewModel.deletionRequestedOn.length() == 0 ? @string/securelink_request_deletion : @string/securelink_deletion_requested_on(viewModel.deletionRequestedOn), default=@string/securelink_request_deletion}"
+                        android:drawableStart="@drawable/trash_simple"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintTop_toBottomOf="@id/action_settings"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"/>
+
                     <androidx.appcompat.widget.AppCompatTextView
                         android:onClick="@{deleteAccountClickListener}"
                         style="@style/context_menu_danger_action_label_style"
@@ -571,7 +601,7 @@
                         android:text="@string/manage_account_delete"
                         android:drawableStart="@drawable/sign_out"
                         app:layout_constraintWidth_max="@dimen/section_max_width"
-                        app:layout_constraintTop_toBottomOf="@id/action_settings"
+                        app:layout_constraintTop_toBottomOf="@id/action_request_deletion"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"/>
 
