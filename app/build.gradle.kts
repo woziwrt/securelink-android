@@ -112,8 +112,9 @@ android {
         manifestPlaceholders["appAuthRedirectScheme"] = packageName
 
         ndk {
+            // SecureLink: our own SDK build (post-quantum) is arm64 only for phones; no 32-bit ARM
             //noinspection ChromeOsAbiSupport
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            abiFilters += listOf("arm64-v8a")
         }
     }
 
@@ -148,6 +149,8 @@ android {
 
     buildTypes {
         getByName("debug") {
+            // the Mac emulator is x86_64 – debug builds carry it too, so it does not run through ARM translation
+            ndk { abiFilters += "x86_64" }
             if (useDifferentPackageNameForDebugBuild) {
                 applicationIdSuffix = ".debug"
             }
