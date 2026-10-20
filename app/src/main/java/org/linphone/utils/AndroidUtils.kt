@@ -137,6 +137,8 @@ class AppUtils {
         @AnyThread
         fun getInitials(displayName: String, limit: Int = 2): String {
             if (displayName.isEmpty()) return ""
+            // SecureLink: accounts are numbers – a lone digit in the circle means nothing, show a person (as iOS)
+            if (displayName.trim().all { it.isDigit() }) return ""
 
             val split = displayName.uppercase(Locale.getDefault()).split(" ")
             var initials = ""
