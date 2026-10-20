@@ -601,6 +601,7 @@ class ContactsManager
 
         val context = coreContext.context
         ShortcutUtils.removeLegacyShortcuts(context)
+        ShortcutUtils.removeAllConversationShortcuts(context) // SecureLink: no names outside the app
         // No longer create chat room shortcuts depending on most recents ones, create it when a message is sent or received instead
         /*if (ActivityCompat.checkSelfPermission(
                 context,

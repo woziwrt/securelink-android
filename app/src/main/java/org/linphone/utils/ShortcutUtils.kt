@@ -45,6 +45,23 @@ class ShortcutUtils {
     companion object {
         private const val TAG = "[Shortcut Utils]"
 
+        // SecureLink (as iOS without intents): conversation shortcuts would show contact names on the launcher and in
+        // the system's conversation lists – none are created, and any left from before are removed at start
+        private const val SECURELINK_NO_CONVERSATION_SHORTCUTS = true
+
+        @WorkerThread
+        fun removeAllConversationShortcuts(context: Context) {
+            val ids = ShortcutManagerCompat.getShortcuts(
+                context,
+                ShortcutManagerCompat.FLAG_MATCH_DYNAMIC or ShortcutManagerCompat.FLAG_MATCH_CACHED or ShortcutManagerCompat.FLAG_MATCH_PINNED
+            ).map { it.id }
+            if (ids.isNotEmpty()) {
+                Log.i("$TAG Removing [${ids.size}] conversation shortcut(s)")
+                ShortcutManagerCompat.removeAllDynamicShortcuts(context)
+                ShortcutManagerCompat.removeLongLivedShortcuts(context, ids)
+            }
+        }
+
         @WorkerThread
         fun removeShortcutToChatRoom(chatRoom: ChatRoom) {
             val id = LinphoneUtils.getConversationId(chatRoom)
@@ -87,6 +104,7 @@ class ShortcutUtils {
 
         @WorkerThread
         fun createDynamicShortcutToChatRoom(context: Context, chatRoom: ChatRoom) {
+            if (SECURELINK_NO_CONVERSATION_SHORTCUTS) return
             val shortcut: ShortcutInfoCompat? = createChatRoomShortcut(context, chatRoom)
             if (shortcut != null) {
                 Log.i("$TAG Created dynamic shortcut for ${shortcut.shortLabel}, pushing it")
@@ -195,6 +213,7 @@ class ShortcutUtils {
 
         @WorkerThread
         fun createOrUpdateChatRoomShortcut(context: Context, chatRoom: ChatRoom) {
+            if (SECURELINK_NO_CONVERSATION_SHORTCUTS) return
             val id = LinphoneUtils.getConversationId(chatRoom)
             val found = ShortcutManagerCompat.getDynamicShortcuts(context).find {
                 it.id == id

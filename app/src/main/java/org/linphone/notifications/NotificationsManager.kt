@@ -29,7 +29,6 @@ import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.net.Uri
@@ -43,7 +42,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import androidx.core.app.TaskStackBuilder
-import androidx.core.content.LocusIdCompat
 import androidx.navigation.NavDeepLinkBuilder
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -51,7 +49,6 @@ import org.linphone.R
 import org.linphone.compatibility.Compatibility
 import org.linphone.contacts.AvatarGenerator
 import org.linphone.contacts.ContactsManager.ContactsListener
-import org.linphone.contacts.getAvatarBitmap
 import org.linphone.contacts.getPerson
 import org.linphone.core.Account
 import org.linphone.core.Address
@@ -782,17 +779,9 @@ class NotificationsManager
                 .format(missedCallCount.toString())
             Log.i("$TAG Updating missed calls notification count to $missedCallCount")
         } else {
-            val remoteAddress = call.callLog.remoteAddress
-            val conferenceInfo = call.callLog.conferenceInfo
-            body = if (conferenceInfo != null) {
-                context.getString(R.string.notification_missed_group_call)
-                    .format(conferenceInfo.subject ?: LinphoneUtils.getDisplayName(remoteAddress))
-            } else {
-                val friend: Friend? = coreContext.contactsManager.findContactByAddress(remoteAddress)
-                context.getString(R.string.notification_missed_call)
-                    .format(friend?.name ?: LinphoneUtils.getDisplayName(remoteAddress))
-            }
-            Log.i("$TAG Creating missed call notification with title [$body]")
+            // SecureLink (as iOS, Petr 15. 10.): a missed call never names the caller
+            body = ""
+            Log.i("$TAG Creating missed call notification")
         }
 
         val pendingIntent = NavDeepLinkBuilder(context)
@@ -1576,77 +1565,26 @@ class NotificationsManager
     private fun createMessageNotification(
         notifiable: Notifiable,
         pendingIntent: PendingIntent,
-        id: String,
-        me: Person
+        @Suppress("UNUSED_PARAMETER") id: String,
+        @Suppress("UNUSED_PARAMETER") me: Person
     ): Notification {
-        val style = NotificationCompat.MessagingStyle(me)
-        val allPersons = arrayListOf<Person>()
-
-        var lastPersonAvatar: Bitmap? = null
-        var lastPerson: Person? = null
-        for (message in notifiable.messages) {
-            val friend = message.friend
-            val person = getPerson(friend, message.sender)
-
-            if (!message.isOutgoing) {
-                // We don't want to see our own avatar
-                lastPerson = person
-                lastPersonAvatar = friend?.getAvatarBitmap()
-
-                if (allPersons.find { it.key == person.key } == null) {
-                    allPersons.add(person)
-                }
-            }
-
-            val senderPerson = if (message.isOutgoing) null else person // Use null for ourselves
-            val text = if (corePreferences.showChatMessageContentInNotification) {
-                message.message
-            } else {
-                AppUtils.getString(R.string.notification_chat_message_hidden_content)
-            }
-            val tmp = NotificationCompat.MessagingStyle.Message(
-                text,
-                message.time,
-                senderPerson
-            )
-            if (message.filePath != null) tmp.setData(message.fileMime, message.filePath)
-
-            style.addMessage(tmp)
-            if (message.isOutgoing) {
-                style.addHistoricMessage(tmp)
-            }
-        }
-
-        style.conversationTitle = if (notifiable.isGroup) notifiable.groupTitle else lastPerson?.name
-        style.isGroupConversation = notifiable.isGroup
-        Log.i(
-            "$TAG Conversation is ${if (style.isGroupConversation) "group" else "1-1"} with title [${style.conversationTitle}]"
-        )
-
-        val largeIcon = lastPersonAvatar
+        // SecureLink (as iOS, Petr 15. 10.): "SecureLink – Message received", never who wrote or what – no sender, text,
+        // avatar, conversation shortcut or reply from the lock screen
         val notificationBuilder = NotificationCompat.Builder(
             context,
             context.getString(R.string.notification_channel_chat_id)
         )
             .setSmallIcon(R.drawable.chat_teardrop_text)
             .setAutoCancel(true)
-            .setLargeIcon(largeIcon)
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.securelink_notification_message_received))
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setGroup(CHAT_NOTIFICATIONS_GROUP)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setNumber(notifiable.messages.size)
             .setWhen(System.currentTimeMillis())
             .setShowWhen(true)
-            .setStyle(style)
             .setContentIntent(pendingIntent)
-            .addAction(getMarkMessageAsReadAction(notifiable))
-            .addAction(getReplyMessageAction(notifiable))
-            .setShortcutId(id)
-            .setLocusId(LocusIdCompat(id))
-
-        for (person in allPersons) {
-            notificationBuilder.addPerson(person)
-        }
 
         if (corePreferences.markConversationAsReadWhenDismissingMessageNotification) {
             Log.i("$TAG Conversation will be marked as read upon notification dismissal")
