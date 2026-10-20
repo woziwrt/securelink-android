@@ -101,6 +101,7 @@ class ChatMessageLongPressViewModel : GenericViewModel() {
 
     @UiThread
     fun setMessage(model: MessageModel) {
+        hideForward.value = true // SecureLink: no forwarding out of a conversation (as iOS)
         hideCopyTextToClipboard.value = model.text.value.isNullOrEmpty()
         isChatRoomReadOnly.value = model.chatRoomIsReadOnly
         isMessageOutgoing.value = model.isOutgoing

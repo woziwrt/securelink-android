@@ -186,16 +186,17 @@
                     android:importantForAccessibility="no"
                     android:visibility="@{viewModel.hideCopyTextToClipboard ? View.GONE : View.VISIBLE}"/>
 
+                <!-- SecureLink: no forwarding out of a conversation (as iOS 802c9ac19) -->
                 <androidx.appcompat.widget.AppCompatTextView
                     style="@style/chat_bubble_popup_menu_style"
                     android:id="@+id/action_forward"
+                    android:visibility="gone"
                     android:onClick="@{() -> viewModel.forwardClickListener()}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/menu_forward_chat_message"
                     android:background="@drawable/action_background_middle"
-                    android:drawableEnd="@drawable/forward"
-                    android:visibility="@{viewModel.hideForward || viewModel.hasBeenRetracted ? View.GONE : View.VISIBLE}" />
+                    android:drawableEnd="@drawable/forward" />
 
                 <View
                     android:layout_width="match_parent"
