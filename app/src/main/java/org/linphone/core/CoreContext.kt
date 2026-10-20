@@ -289,6 +289,13 @@ class CoreContext
                 SecureLinkAdmin.enforceEncryptedMessaging(core)
                 SecureLinkAdmin.enforceDisappearing(core)
                 SecureLinkAdmin.pruneCallHistory(core)
+                // SecureLink: with push (FCM) the phone is woken for calls and messages – no permanent foreground
+                // service and notification icon (it was switched on while the app had no push yet)
+                if (corePreferences.keepServiceAlive && core.accountList.any { it.params.isPushNotificationAvailable }) {
+                    Log.i("$TAG SecureLink: push available, keep-alive foreground service no longer needed")
+                    corePreferences.keepServiceAlive = false
+                    stopKeepAliveService()
+                }
                 // SecureLink: a message that disappears (or is deleted) takes its attachment file with it – the SDK
                 // keeps the files by default ([chat] delete_contents=0), as iOS
                 core.config.setInt("chat", "delete_contents", 1)

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "846159991639",
+    "project_id": "link-8017e",
+    "storage_bucket": "link-8017e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:846159991639:android:c1d5f9ffbf88df308b6412",
+        "android_client_info": {
+          "package_name": "cc.securelink.talk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1LIHrrF0vn5ZPMJnIQOsf8WQHhNAQH64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
