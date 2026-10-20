@@ -269,6 +269,7 @@ class CoreContext
                 // Wait for GlobalState.ON as some settings modification won't be saved
                 // in RC file if Core isn't ON
                 onCoreStarted()
+                SecureLinkAdmin.enforceEncryptedMessaging(core)
                 SecureLinkAdmin.enforceDisappearing(core)
             } else if (state == GlobalState.Shutdown) {
                 onCoreStopped()
@@ -291,6 +292,7 @@ class CoreContext
         ) {
             Log.i("$TAG Configuring state changed [$status], message is [$message]")
             if (status == ConfiguringState.Successful) {
+                SecureLinkAdmin.enforceEncryptedMessaging(core)
                 val accounts = core.accountList
                 if (core.defaultAccount == null && accounts.isNotEmpty()) {
                     val firstAccount = accounts.firstOrNull()

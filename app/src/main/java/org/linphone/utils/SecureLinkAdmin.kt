@@ -60,6 +60,22 @@ object SecureLinkAdmin {
         }
     }
 
+    /**
+     * Messages are end-to-end encrypted or not sent at all: with "encryption mandatory" every screen creates an
+     * encrypted (LIME) conversation or none, never the plain "Basic" one linphone falls back to when LIME is missing.
+     */
+    @WorkerThread
+    fun enforceEncryptedMessaging(core: Core) {
+        for (account in core.accountList) {
+            if (!account.params.instantMessagingEncryptionMandatory) {
+                val params = account.params.clone()
+                params.instantMessagingEncryptionMandatory = true
+                account.params = params
+                Log.i("$TAG Encrypted messaging made mandatory for [${params.identityAddress?.asStringUriOnly()}]")
+            }
+        }
+    }
+
     /** At every start: conversations others started (or older ones) get the 7 days too. */
     @WorkerThread
     fun enforceDisappearing(core: Core) {
