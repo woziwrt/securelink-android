@@ -118,11 +118,8 @@
                 <data android:scheme="sip" />
                 <data android:scheme="callto" />
                 <data android:scheme="sips" />
-                <data android:scheme="sip-linphone" />
-                <data android:scheme="sips-linphone" />
-                <data android:scheme="linphone-sip" />
-                <data android:scheme="linphone-sips" />
-                <data android:scheme="linphone-config" />
+                <!-- SecureLink: own scheme – linphone-* is also claimed by the original Linphone app -->
+                <data android:scheme="securelink-config" />
             </intent-filter>
 
         </activity>

@@ -26,6 +26,7 @@ import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
 import android.util.Patterns
+import androidx.core.net.toUri
 import androidx.annotation.AnyThread
 import androidx.annotation.DrawableRes
 import androidx.annotation.IntegerRes
@@ -77,9 +78,24 @@ class LinphoneUtils {
             }
         }
 
+        // SecureLink: configuration only from our own servers (https, host under securelink.cc) – a foreign web page or a
+        // planted QR code must not point the app elsewhere. Used by the securelink-config: link and by the QR scanner.
+        @AnyThread
+        fun isAllowedProvisioning(url: String): Boolean {
+            val parsed = url.toUri()
+            val host = parsed.host?.lowercase() ?: return false
+            return parsed.scheme == "https" && (host == "securelink.cc" || host.endsWith(".securelink.cc"))
+        }
+
         @AnyThread
         fun getRemoteProvisioningUrlFromUri(uri: String): String? {
-            val linphoneScheme = "linphone-config:"
+            val url = getRemoteProvisioningUrlFromUriUnchecked(uri) ?: return null
+            return if (isAllowedProvisioning(url)) url else null
+        }
+
+        @AnyThread
+        private fun getRemoteProvisioningUrlFromUriUnchecked(uri: String): String? {
+            val linphoneScheme = "securelink-config:"
             return if (uri.startsWith(linphoneScheme)) {
                 val remoteConfigUri = uri.substring(linphoneScheme.length)
                 val url = when {
