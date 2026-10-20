@@ -98,7 +98,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var publishPresence: Boolean
-        get() = config.getBool("app", "publish_presence", true)
+        get() = false // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("app", "publish_presence", value)
         }
@@ -119,7 +119,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var showDeveloperSettings: Boolean
-        get() = config.getBool("ui", "show_developer_settings", false)
+        get() = false // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("ui", "show_developer_settings", value)
         }
@@ -150,7 +150,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var automaticallyStartCallRecording: Boolean
-        get() = config.getBool("app", "auto_start_call_record", false)
+        get() = false // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("app", "auto_start_call_record", value)
         }
@@ -230,7 +230,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var showChatMessageContentInNotification: Boolean
-        get() = config.getBool("ui", "display_notification_content", true)
+        get() = false // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("ui", "display_notification_content", value)
         }
@@ -301,7 +301,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var disableAddContact: Boolean
-        get() = config.getBool("ui", "disable_add_contact", false)
+        get() = true // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("ui", "disable_add_contact", value)
         }
@@ -329,7 +329,7 @@ class CorePreferences
     // Allows to make screenshots
     @get:AnyThread @set:WorkerThread
     var enableSecureMode: Boolean
-        get() = config.getBool("ui", "enable_secure_mode", true)
+        get() = true // SecureLink: fixed in the binary, a provisioning file cannot turn it on
         set(value) {
             config.setBool("ui", "enable_secure_mode", value)
         }
@@ -382,7 +382,7 @@ class CorePreferences
 
     @get:AnyThread
     val hideSipAddresses: Boolean
-        get() = config.getBool("ui", "hide_sip_addresses", false)
+        get() = true // SecureLink: fixed in the binary, a provisioning file cannot turn it on
 
     @get:AnyThread
     val disableChat: Boolean
@@ -390,7 +390,7 @@ class CorePreferences
 
     @get:AnyThread
     val disableMeetings: Boolean
-        get() = config.getBool("ui", "disable_meetings_feature", false)
+        get() = true // SecureLink: fixed in the binary, a provisioning file cannot turn it on
 
     @get:AnyThread
     val disableBroadcasts: Boolean
@@ -398,7 +398,7 @@ class CorePreferences
 
     @get:AnyThread
     val disableCallRecordings: Boolean
-        get() = config.getBool("ui", "disable_call_recordings_feature", false)
+        get() = true // SecureLink: fixed in the binary, a provisioning file cannot turn it on
 
     @get:AnyThread
     val maxAccountsCount: Int

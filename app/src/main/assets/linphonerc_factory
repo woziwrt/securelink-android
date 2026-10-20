@@ -9,7 +9,8 @@ mtu=1300
 force_ice_disablement=0
 
 [rtp]
-accept_any_encryption=1
+# SecureLink: never fall back to SDES (keys in SIP would be visible to the server)
+accept_any_encryption=0
 
 [sip]
 guess_hostname=1
@@ -18,14 +19,17 @@ auto_net_state_mon=1
 auto_answer_replacing_calls=1
 ping_with_options=0
 use_cpim=1
-zrtp_key_agreements_suites=MS_ZRTP_KEY_AGREEMENT_K255_MLK512,MS_ZRTP_KEY_AGREEMENT_K255_KYB512
+# SecureLink: ZRTP only, post-quantum hybrids only, strongest first (same as the iOS app)
+media_encryption=zrtp
+media_encryption_mandatory=1
+zrtp_key_agreements_suites=MS_ZRTP_KEY_AGREEMENT_K448_MLK1024,MS_ZRTP_KEY_AGREEMENT_K255_MLK512
+verify_server_certs=1
+verify_server_cn=1
 chat_messages_aggregation_delay=1000
 chat_messages_aggregation=1
 update_presence_model_timestamp_before_publish_expires_refresh=1
 
 [sound]
-#remove this property for any application that is not Linphone public version itself
-ec_calibrator_cool_tones=1
 disable_ringing=0
 
 [audio]
@@ -46,6 +50,16 @@ store_friends=0
 
 [app]
 record_aware=1
+# SecureLink: forced application behaviour
+vfs_enabled=1
+publish_presence=0
+read_and_agree_terms_and_privacy=1
+show_confirmation_dialog_zrtp_trust_call=1
+auto_start_call_record=0
+
+[account_creator]
+# SecureLink: no public account creation
+url=
 
 [lime]
 lime_update_threshold=86400
@@ -54,3 +68,17 @@ lime_update_threshold=86400
 alerts_enabled=1
 
 ## End of factory rc
+
+[ui]
+# SecureLink: what the app shows – fixed, not user settings
+disable_meetings_feature=1
+disable_call_recordings_feature=1
+disable_add_contact=1
+hide_sip_addresses=1
+show_favorites_contacts=0
+show_developer_settings=0
+change_main_color_allowed=0
+enable_secure_mode=1
+display_notification_content=0
+max_account=1
+dark_mode_allowed=1

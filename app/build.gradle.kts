@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.navigation)
 }
 
-val packageName = "org.linphone"
+val packageName = "cc.securelink.talk" // SecureLink: same identifier as the iOS app
 val useDifferentPackageNameForDebugBuild = false
 
 val sdkPath = providers.gradleProperty("LinphoneSdkBuildDir").get()
@@ -22,7 +22,7 @@ val googleServices = File(projectDir.absolutePath + "/google-services.json")
 val linphoneLibs = File("$sdkPath/libs/")
 val linphoneDebugLibs = File("$sdkPath/libs-debug/")
 val firebaseCloudMessagingAvailable = googleServices.exists()
-val crashlyticsAvailable = googleServices.exists() && linphoneLibs.exists() && linphoneDebugLibs.exists()
+val crashlyticsAvailable = false // SecureLink: no crash reports leave the phone; Firebase is used for push only
 
 if (firebaseCloudMessagingAvailable) {
     println("google-services.json found, enabling Firebase CloudMessaging feature")
