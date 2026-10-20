@@ -31,7 +31,7 @@
     <string name="conference_failed_to_add_participant_invalid_address_toast">Neplatná SIP adresa, nelze přidat do konference</string>
     <string name="dialog_install">Instalovat</string>
     <string name="welcome_page_2_message">Vaše komunikace je bezpečná díky našemu <b>koncovému šifrování</b>.</string>
-    <string name="remote_provisioning_config_failed_toast">Došlo k chybě při pokusu o stažení a použití vzdálené konfigurace</string>
+    <string name="remote_provisioning_config_failed_toast">Přihlášení se nepovedlo. QR kód platí jen jednou a 7 dní – požádejte správce o nový.</string>
     <string name="assistant_third_party_sip_account_warning_explanation">Některé funkce jako skupinové zprávy nebo videokonference vyžadují účet &appName;\n\nTyto funkce jsou skryté, pokud se zaregistrujete pomocí SIP účtu třetí strany.\n\nPro aktivaci v komerčním projektu nás prosím kontaktujte.</string>
     <string name="assistant_permissions_subtitle">Pro plné využívání &appName; potřebujeme, abyste nám udělili následující oprávnění:</string>
     <string name="assistant_permissions_record_audio_title"><b>Nahrávání zvuku:</b> Aby Vás váš protějšek slyšel a pro nahrávání hlasových zpráv.</string>

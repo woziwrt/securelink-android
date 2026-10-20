@@ -19,8 +19,10 @@
  */
 package org.linphone.ui.assistant.viewmodel
 
+import android.content.Intent
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
+import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.core.ConfiguringState
@@ -76,6 +78,24 @@ class QrCodeViewModel
             if (result == null) {
                 showRedToast(R.string.assistant_qr_code_invalid_toast, R.drawable.warning_circle)
             } else {
+                // SecureLink: a personal invitation (https://<install host>/i/<token>, asks for the code sent by SMS) and
+                // the review page (/r/<code>) are web pages, not logins – open them in the browser (as iOS)
+                val page = result.toUri()
+                if (LinphoneUtils.isAllowedProvisioning(result) &&
+                    (page.path.orEmpty().startsWith("/i/") || page.path.orEmpty().startsWith("/r/"))
+                ) {
+                    Log.i("$TAG QR code is an invitation or review page, opening it in the browser")
+                    coreContext.postOnMainThread {
+                        try {
+                            coreContext.context.startActivity(
+                                Intent(Intent.ACTION_VIEW, page).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        } catch (e: Exception) {
+                            Log.e("$TAG No browser: $e")
+                        }
+                    }
+                    return
+                }
                 val url = LinphoneUtils.getRemoteProvisioningUrlFromUri(result)
                 if (url == null) {
                     Log.e("$TAG The content of the QR Code [$result] doesn't seem to be a valid web URL")
