@@ -343,7 +343,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var themeMainColor: String
-        get() = config.getString("ui", "theme_main_color", "orange")!!
+        get() = "securelink" // SecureLink: fixed theme, provisioning cannot switch it back
         set(value) {
             config.setString("ui", "theme_main_color", value)
         }

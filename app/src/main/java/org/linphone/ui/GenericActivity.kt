@@ -68,6 +68,7 @@ open class GenericActivity : AppCompatActivity() {
             "plum" -> theme.applyStyle(R.style.Theme_LinphonePlum, true)
             "titanium" -> theme.applyStyle(R.style.Theme_LinphoneTitanium, true)
             "mineral_blue" -> theme.applyStyle(R.style.Theme_LinphoneMineralBlue, true)
+            "securelink" -> theme.applyStyle(R.style.Theme_LinphoneSecureLink, true)
             else -> theme.applyStyle(R.style.Theme_Linphone, true)
         }
         return theme

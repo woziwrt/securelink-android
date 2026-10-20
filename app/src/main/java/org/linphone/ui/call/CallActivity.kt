@@ -123,6 +123,7 @@ class CallActivity : GenericActivity() {
             "plum" -> theme.applyStyle(R.style.Theme_LinphoneInCallPlum, true)
             "titanium" -> theme.applyStyle(R.style.Theme_LinphoneInCallTitanium, true)
             "mineral_blue" -> theme.applyStyle(R.style.Theme_LinphoneInCallMineralBlue, true)
+            "securelink" -> theme.applyStyle(R.style.Theme_LinphoneInCallSecureLink, true)
             else -> theme.applyStyle(R.style.Theme_LinphoneInCall, true)
         }
         return theme

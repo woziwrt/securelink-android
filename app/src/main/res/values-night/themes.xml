@@ -136,4 +136,9 @@
         <item name="color_main1_100">@color/mineral_blue_main_100</item>
         <item name="color_main1_500">@color/mineral_blue_main_500</item>
     </style>
+    <!-- SecureLink: one fixed theme, the user never picks a colour -->
+    <style name="Theme.LinphoneSecureLink" parent="Theme.Linphone">
+        <item name="color_main1_100">@color/securelink_main_100</item>
+        <item name="color_main1_500">@color/securelink_main_500</item>
+    </style>
 </resources>

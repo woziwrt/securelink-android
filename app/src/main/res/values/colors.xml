@@ -94,5 +94,8 @@
 
     <color name="mineral_blue_main_100">#C5E0F3</color>
     <color name="mineral_blue_main_500">#669ED7</color>
+    <!-- SecureLink: the admin web blue, same as the iOS app -->
+    <color name="securelink_main_100">#E8EEF8</color>
+    <color name="securelink_main_500">#1F5FBF</color>
 
 </resources>
