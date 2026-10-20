@@ -71,8 +71,8 @@
     <string name="conversation_info_dialog_delete_all_message">Z historie budou odebrány všechny zprávy.</string>
     <string name="conversation_info_confirm_start_group_call_dialog_title">Zahájit skupinový hovor?</string>
     <string name="conversation_event_conference_created">Přidal(a) jste se ke skupině</string>
-    <string name="conversation_event_security_event_level_downgraded">Úroveň bezpečnosti byla snížena kvůli %s</string>
-    <string name="conversation_event_security_event_max_participant_count_exceeded">Maximální počet účastníků byl překročen o %s</string>
+    <string name="conversation_event_security_event_level_downgraded">%s má nové, zatím neověřené zařízení.</string>
+    <string name="conversation_event_security_event_max_participant_count_exceeded">%s má příliš mnoho zařízení.</string>
     <string name="meeting_schedule_add_more_participants_title">Klepnutím přidat další účastníky</string>
     <string name="call_zrtp_sas_validation_required">Je vyžadováno ověření</string>
     <string name="call_stats_fec_lost_packets_label">Ztracené pakety: %s</string>
@@ -553,8 +553,8 @@
     <string name="conversation_event_admin_unset">%s již není administrátor</string>
     <string name="conversation_event_ephemeral_messages_enabled">Mizející zprávy byly povoleny</string>
     <string name="conversation_event_ephemeral_messages_lifetime_changed">Doba platnosti mizejících zpráv je nyní %s</string>
-    <string name="conversation_event_security_event_lime_identity_key_changed">Klíč identity LIME byl změněn pro %s</string>
-    <string name="conversation_event_security_event_man_in_the_middle_detected">Detekován útok typu MIM (man-in-the-middle) pro %s</string>
+    <string name="conversation_event_security_event_lime_identity_key_changed">%s má nový klíč pro zprávy (nový telefon nebo přeinstalovaná appka). Ověřte si hovorem bezpečnostní slovo.</string>
+    <string name="conversation_event_security_event_man_in_the_middle_detected">Pozor: klíč pro %s nesouhlasí s ověřeným. Nic citlivého nepište, dokud si hovorem neověříte bezpečnostní slovo.</string>
     <string name="conversation_event_subject_changed">nový předmět: %s</string>
     <string name="conversation_details_media_documents_title">Média a dokumenty</string>
     <string name="conversation_media_list_title">Sdílená média</string>
