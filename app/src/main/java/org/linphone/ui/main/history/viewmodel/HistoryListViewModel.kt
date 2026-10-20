@@ -42,6 +42,7 @@ import org.linphone.ui.main.model.ConversationContactOrSuggestionModel
 import org.linphone.ui.main.viewmodel.AbstractMainViewModel
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 import java.text.Collator
 import java.util.Locale
 
@@ -178,6 +179,7 @@ class HistoryListViewModel
         }
 
         val list = arrayListOf<CallLogModelWrapper>()
+        SecureLinkAdmin.pruneCallHistory(coreContext.core) // SecureLink: 7 days, as messages
 
         val account = LinphoneUtils.getDefaultAccount()
         // Fetch all call logs if only one account to workaround no history issue

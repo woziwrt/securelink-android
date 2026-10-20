@@ -288,6 +288,7 @@ class CoreContext
                 onCoreStarted()
                 SecureLinkAdmin.enforceEncryptedMessaging(core)
                 SecureLinkAdmin.enforceDisappearing(core)
+                SecureLinkAdmin.pruneCallHistory(core)
                 // SecureLink: a message that disappears (or is deleted) takes its attachment file with it – the SDK
                 // keeps the files by default ([chat] delete_contents=0), as iOS
                 core.config.setInt("chat", "delete_contents", 1)

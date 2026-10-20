@@ -345,6 +345,15 @@ object SecureLinkAdmin {
         return core.config.getInt("securelink", "deletion_requested_$user", 0).toLong()
     }
 
+    /** Call history lives 7 days, like messages – older entries are deleted, not just hidden (as iOS) */
+    @WorkerThread
+    fun pruneCallHistory(core: Core) {
+        val oldest = System.currentTimeMillis() / 1000 - DISAPPEAR_AFTER_SECONDS
+        val expired = core.callLogs.filter { it.startDate < oldest }
+        for (log in expired) core.removeCallLog(log)
+        if (expired.isNotEmpty()) Log.i("$TAG Removed [${expired.size}] call log(s) older than 7 days")
+    }
+
     /** At every start: conversations others started (or older ones) get the 7 days too. */
     @WorkerThread
     fun enforceDisappearing(core: Core) {
