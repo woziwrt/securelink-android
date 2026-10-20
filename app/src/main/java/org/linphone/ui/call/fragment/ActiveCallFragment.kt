@@ -168,6 +168,8 @@ class ActiveCallFragment : GenericCallFragment() {
 
         val actionsBottomSheetBehavior = BottomSheetBehavior.from(binding.bottomBar.root)
         actionsBottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        // SecureLink: no transfer, new call, keypad, pause or recording – the sheet cannot be dragged open (as iOS)
+        actionsBottomSheetBehavior.isDraggable = false
         actionsBottomSheetBehavior.addBottomSheetCallback(actionsBottomSheetCallback)
 
         val numpadBottomSheetBehavior = BottomSheetBehavior.from(binding.callNumpad.root)
