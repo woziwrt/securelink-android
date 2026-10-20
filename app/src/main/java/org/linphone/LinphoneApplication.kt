@@ -85,6 +85,8 @@ class LinphoneApplication : Application(), SingletonImageLoader.Factory {
             corePreferences.factoryConfigPath
         )
         corePreferences.config = config
+        // SecureLink: set before the core exists, so no TLS connection ever uses the system roots
+        config.setString("sip", "root_ca", corePreferences.rootCaPath)
 
         val appName = context.getString(R.string.app_name)
         Factory.instance().setLoggerDomain(appName)

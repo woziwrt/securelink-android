@@ -495,6 +495,10 @@ class CorePreferences
         get() = context.filesDir.absolutePath + "/auth_state.json"
 
     @get:AnyThread
+    val rootCaPath: String
+        get() = context.filesDir.absolutePath + "/securelink-ca.pem"
+
+    @get:AnyThread
     val messageReceivedInVisibleConversationNotificationSound: String
         get() = context.filesDir.absolutePath + "/share/sounds/linphone/incoming_chat.wav"
 
@@ -504,6 +508,8 @@ class CorePreferences
         copy("linphonerc_factory", factoryConfigPath, true)
         copy("assistant_linphone_default_values", linphoneDefaultValuesPath, true)
         copy("assistant_third_party_default_values", thirdPartyDefaultValuesPath, true)
+        // SecureLink: the only trusted root is our own CA (debug builds also trust the lab CA, see src/debug/assets)
+        copy("securelink-ca.pem", rootCaPath, true)
     }
 
     @AnyThread
