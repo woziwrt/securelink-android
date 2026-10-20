@@ -259,6 +259,12 @@ class ContactsManager
             Log.i("$TAG Friend list [${friendList.displayName}] sync status changed to [$status]")
             when (status) {
                 FriendList.SyncStatus.Successful -> {
+                    // SecureLink: the server directory replaces its friends wholesale; a number cached as unknown during a
+                    // call (member who joined after the last refresh) would stay a number in the history until a restart
+                    knownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
+                    knownContactsAvatarsMap.clear()
+                    unknownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
+                    unknownContactsAvatarsMap.clear()
                     notifyContactsListChanged()
                 }
                 FriendList.SyncStatus.Failure -> {
