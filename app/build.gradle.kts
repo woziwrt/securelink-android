@@ -123,7 +123,7 @@ android {
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                output.outputFileName = "linphone-android-${variant.buildType.name}-$gitVersion.apk"
+                output.outputFileName = "securelink-${variant.buildType.name}-$gitVersion.apk" // SecureLink
             }
     }
 
