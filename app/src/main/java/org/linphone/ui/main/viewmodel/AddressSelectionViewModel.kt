@@ -382,6 +382,10 @@ abstract class AddressSelectionViewModel
                     Log.w("$TAG Found friend [${friend.name}] in search results but no Address could be found, skipping it")
                 }
             } else if (address != null) {
+                // SecureLink: no "Suggestions" – a typed address or one from the call history that is not in the
+                // administrator's directory is never offered (as iOS)
+                continue
+                @Suppress("UNREACHABLE_CODE")
                 if (defaultAccountAddress != null && address.weakEqual(defaultAccountAddress)) {
                     Log.i("$TAG Removing from suggestions current default account address")
                     continue

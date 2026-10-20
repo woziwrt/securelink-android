@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- SecureLink: no numpad – only contacts from the administrator's directory can be called (as iOS) -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:bind="http://schemas.android.com/tools">
@@ -146,7 +147,7 @@
                         android:onClick="@{() -> viewModel.switchBetweenKeyboardAndNumpad()}"
                         android:contentDescription="@string/content_description_show_numpad"
                         android:src="@{viewModel.isNumpadVisible ? @drawable/keyboard : @drawable/numpad, default=@drawable/numpad}"
-                        android:visibility="@{viewModel.searchFilter.length() == 0 ? View.VISIBLE : View.GONE}"
+                        android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="@id/search_bar"
                         app:layout_constraintEnd_toEndOf="@id/search_bar"
                         app:layout_constraintTop_toTopOf="@id/search_bar"
@@ -323,7 +324,7 @@
                 android:layout_margin="16dp"
                 android:src="@drawable/numpad"
                 android:contentDescription="@string/content_description_show_numpad"
-                android:visibility="@{viewModel.isNumpadVisible || viewModel.multipleSelectionMode ? View.GONE : View.VISIBLE}"
+                android:visibility="gone"
                 app:tint="?attr/color_on_main"
                 app:backgroundTint="?attr/color_main1_500"
                 app:shapeAppearanceOverlay="@style/rounded"
