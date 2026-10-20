@@ -54,6 +54,7 @@ import org.linphone.core.tools.Log
 import org.linphone.notifications.NotificationsManager
 import org.linphone.telecom.TelecomManager
 import org.linphone.utils.ActivityMonitor
+import org.linphone.utils.SecureLinkAdmin
 import org.linphone.utils.AppUtils
 import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
@@ -268,8 +269,17 @@ class CoreContext
                 // Wait for GlobalState.ON as some settings modification won't be saved
                 // in RC file if Core isn't ON
                 onCoreStarted()
+                SecureLinkAdmin.enforceDisappearing(core)
             } else if (state == GlobalState.Shutdown) {
                 onCoreStopped()
+            }
+        }
+
+        @WorkerThread
+        override fun onChatRoomStateChanged(core: Core, chatRoom: ChatRoom, state: ChatRoom.State?) {
+            // SecureLink: every new conversation (ours or one somebody else started) disappears after 7 days
+            if (state == ChatRoom.State.Created) {
+                SecureLinkAdmin.enforceDisappearing(core, chatRoom)
             }
         }
 

@@ -761,7 +761,9 @@ class LinphoneUtils {
         }
 
         @WorkerThread
-        fun chatRoomConfigureEphemeralMessagesLifetime(chatRoom: ChatRoom, lifetime: Long) {
+        fun chatRoomConfigureEphemeralMessagesLifetime(chatRoom: ChatRoom, wantedLifetime: Long) {
+            // SecureLink: never off (except the administrator's conversation), never longer than 7 days
+            val lifetime = SecureLinkAdmin.allowedLifetime(chatRoom.core, chatRoom, wantedLifetime)
             if (lifetime == 0L) {
                 if (chatRoom.isEphemeralEnabled) {
                     Log.i("$TAG Disabling ephemeral messages")

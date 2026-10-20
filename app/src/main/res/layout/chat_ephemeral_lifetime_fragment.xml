@@ -204,7 +204,9 @@
                         android:background="?attr/color_separator"
                         android:importantForAccessibility="no"/>
 
+                    <!-- SecureLink: disappearing messages cannot be switched off (v1 agreement) -->
                     <RadioButton
+                        android:visibility="gone"
                         style="@style/default_text_style"
                         android:onClick="@{() -> viewModel.onValueSelected(0)}"
                         android:layout_width="match_parent"
