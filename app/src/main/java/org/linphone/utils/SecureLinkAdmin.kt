@@ -11,6 +11,7 @@ import java.text.DateFormat
 import java.util.Date
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
+import org.linphone.core.Address
 import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom
 import org.linphone.core.ChatRoomListenerStub
@@ -105,12 +106,24 @@ object SecureLinkAdmin {
         return coreContext.context.getString(R.string.securelink_report_message_draft, name, address, sent, message.utf8Text.orEmpty())
     }
 
+    /** Report of a contact: name and user@domain, then the reason */
+    fun reportContactDraft(name: String, address: Address): String {
+        val plain = blockKey(address)?.removePrefix("sip:") ?: address.asStringUriOnly()
+        return coreContext.context.getString(R.string.securelink_report_contact_draft, name.ifEmpty { plain }, plain)
+    }
+
     /**
      * Opens (or creates) the encrypted conversation with the administrator and leaves [draft] for its message field.
      * [onReady] gets the conversation id once the conversation exists (an encrypted one has to be joined first).
      */
     @WorkerThread
-    fun openAdminConversation(core: Core, draft: String, onReady: (String) -> Unit, onError: () -> Unit) {
+    fun openAdminConversation(
+        core: Core,
+        draft: String,
+        onReady: (String) -> Unit,
+        onError: () -> Unit,
+        sendNow: Boolean = false
+    ) {
         val uri = setting(core, "admin_uri")
         val admin = if (uri.isEmpty()) null else Factory.instance().createAddress(uri)
         val account = core.defaultAccount
@@ -135,7 +148,12 @@ object SecureLinkAdmin {
 
         val ready = { room: ChatRoom ->
             val id = LinphoneUtils.getConversationId(room)
-            pendingDraft = Pair(id, draft)
+            if (sendNow) {
+                room.createMessageFromUtf8(draft).send()
+                Log.i("$TAG Message sent to the administrator")
+            } else {
+                pendingDraft = Pair(id, draft)
+            }
             onReady(id)
         }
         val participants = arrayOf(admin)
@@ -166,6 +184,74 @@ object SecureLinkAdmin {
                 }
             }
         })
+    }
+
+    // --- blocking on this phone (App Review 1.2, as iOS): no calls ring, messages are dropped, the one-to-one
+    // conversation leaves the list at once, and the administrator gets an automatic report
+    private const val BLOCKED_KEY = "blocked_uris"
+
+    @WorkerThread
+    fun blockedList(core: Core): List<String> {
+        return core.config.getString("securelink", BLOCKED_KEY, "").orEmpty().split(",").filter { it.isNotEmpty() }
+    }
+
+    /** "sip:user@domain" – whatever the device (;gr=) or scheme */
+    fun blockKey(address: Address?): String? {
+        val user = address?.username ?: return null
+        val domain = address.domain ?: return null
+        return "sip:$user@$domain"
+    }
+
+    @WorkerThread
+    fun isBlocked(core: Core, address: Address?): Boolean {
+        val key = blockKey(address) ?: return false
+        return blockedList(core).contains(key)
+    }
+
+    /** a one-to-one conversation with a contact blocked on this phone: not shown in the list */
+    @WorkerThread
+    fun isBlockedRoom(core: Core, room: ChatRoom): Boolean {
+        if (!room.hasCapability(ChatRoom.Capabilities.OneToOne.toInt()) || room.participants.size != 1) return false
+        return isBlocked(core, room.participants.first().address)
+    }
+
+    /** an incoming message from a contact blocked on this phone */
+    @WorkerThread
+    fun isBlockedMessage(core: Core, message: ChatMessage): Boolean {
+        return !message.isOutgoing && isBlocked(core, message.fromAddress)
+    }
+
+    /** Calling or writing to a contact blocked on this phone is refused with a toast – unblock first (as iOS) */
+    @WorkerThread
+    fun refuseIfBlocked(core: Core, address: Address?): Boolean {
+        if (!isBlocked(core, address)) return false
+        Log.i("$TAG Refusing to call or write to a contact blocked on this phone")
+        coreContext.showRedToastEvent.postValue(
+            Event(Pair(R.string.securelink_contact_is_blocked_toast, R.drawable.warning_circle))
+        )
+        return true
+    }
+
+    @WorkerThread
+    fun setBlocked(core: Core, address: Address, blocked: Boolean, name: String) {
+        val key = blockKey(address) ?: return
+        val list = blockedList(core).filter { it != key }.toMutableList()
+        if (blocked) list.add(key)
+        core.config.setString("securelink", BLOCKED_KEY, list.joinToString(","))
+        for (room in core.chatRooms) {
+            if (room.participants.size == 1 && room.participants.first().address.weakEqual(address)) {
+                room.muted = blocked
+                if (blocked) room.markAsRead() // its unread messages would keep a badge the user can no longer clear
+            }
+        }
+        Log.i("$TAG $key ${if (blocked) "blocked" else "unblocked"} on this phone")
+        // the report goes to the administrator – unless the administrator is the one blocked, or the one blocking
+        val adminKey = blockKey(Factory.instance().createAddress(setting(core, "admin_uri")))
+        val ownKey = blockKey(core.defaultAccount?.params?.identityAddress)
+        if (blocked && key != adminKey && ownKey != adminKey) {
+            val draft = coreContext.context.getString(R.string.securelink_block_report_draft, name, key.removePrefix("sip:"))
+            openAdminConversation(core, draft, { }, { Log.e("$TAG Block report could not be sent") }, sendNow = true)
+        }
     }
 
     /** At every start: conversations others started (or older ones) get the 7 days too. */

@@ -35,6 +35,7 @@ import org.linphone.ui.main.viewmodel.AddressSelectionViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class StartConversationViewModel
     @UiThread
@@ -160,6 +161,7 @@ class StartConversationViewModel
     @WorkerThread
     fun createOneToOneChatRoomWith(remote: Address) {
         val core = coreContext.core
+        if (SecureLinkAdmin.refuseIfBlocked(core, remote)) return // SecureLink: unblock first
         val account = core.defaultAccount
         if (account == null) {
             Log.e(

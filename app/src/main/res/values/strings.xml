@@ -1078,4 +1078,11 @@
     <string name="securelink_sas_no_match">No match</string>
     <string name="securelink_report_message">Report to administrator</string>
     <string name="securelink_report_message_draft">⚠️ Report of a message from: %1$s (%2$s), %3$s\nMessage: “%4$s”\nWhat happened:\u0020</string>
+    <string name="securelink_report_contact_draft">⚠️ Report of user: %1$s (%2$s)\nWhat happened:\u0020</string>
+    <string name="securelink_block_contact">Block</string>
+    <string name="securelink_unblock_contact">Unblock</string>
+    <string name="securelink_block_report_draft">🚫 Automatic report: I blocked %1$s (%2$s) on my phone.</string>
+    <string name="securelink_contact_blocked_toast">Contact blocked: their calls and messages no longer reach you, and the administrator has been notified.</string>
+    <string name="securelink_contact_unblocked_toast">Contact unblocked</string>
+    <string name="securelink_contact_is_blocked_toast">This contact is blocked. To call or write to them, unblock them on their contact card.</string>
 </resources>

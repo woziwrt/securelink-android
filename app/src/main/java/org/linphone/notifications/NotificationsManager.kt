@@ -78,6 +78,7 @@ import org.linphone.ui.main.MainActivity.Companion.ARGUMENTS_CONVERSATION_ID
 import org.linphone.utils.AppUtils
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 import org.linphone.utils.ShortcutUtils
 
 class NotificationsManager
@@ -317,6 +318,8 @@ class NotificationsManager
         ) {
             Log.i("$TAG Received [${messages.size}] aggregated messages")
             if (corePreferences.disableChat) return
+            // SecureLink: nothing from a contact blocked on this phone (CoreContext drops those messages)
+            if (messages.all { SecureLinkAdmin.isBlockedMessage(core, it) }) return
 
             val id = LinphoneUtils.getConversationId(chatRoom)
             if (currentlyDisplayedChatRoomId.isNotEmpty() && id == currentlyDisplayedChatRoomId) {

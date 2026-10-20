@@ -47,6 +47,7 @@ import org.linphone.ui.main.contacts.model.ContactAvatarModel
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 import androidx.core.net.toUri
 
 class ConversationViewModel
@@ -204,7 +205,14 @@ class ConversationViewModel
             computeComposingLabel()
 
             unreadMessagesCount.postValue(chatRoom.unreadMessagesCount)
-            addEvents(eventLogs)
+            // SecureLink: CoreContext drops a blocked contact's messages, but this listener may run first (as iOS)
+            val core = chatRoom.core
+            addEvents(
+                eventLogs.filter { log ->
+                    val message = log.chatMessage
+                    message == null || !SecureLinkAdmin.isBlockedMessage(core, message)
+                }.toTypedArray()
+            )
         }
 
         @WorkerThread

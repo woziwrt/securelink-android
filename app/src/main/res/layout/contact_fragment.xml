@@ -91,10 +91,11 @@
                     android:layout_height="wrap_content"
                     android:paddingBottom="@dimen/screen_bottom_margin">
 
+                    <!-- SecureLink: attachments are opened from their bubble only – no media/documents lists (as iOS) -->
                     <androidx.constraintlayout.widget.Group
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="@{viewModel.existingConversationId.empty ? View.GONE : View.VISIBLE, default=gone}"
+                        android:visibility="gone"
                         app:constraint_referenced_ids="action_media, action_documents, media_documents_actions, media_documents_separator" />
 
                     <androidx.constraintlayout.widget.ConstraintLayout
@@ -599,7 +600,6 @@
                     <androidx.appcompat.widget.AppCompatTextView
                         style="@style/section_header_style"
                         android:id="@+id/actions"
-                        android:visibility="gone"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:padding="10dp"
@@ -680,6 +680,51 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toBottomOf="@id/action_share"/>
+
+                    <!-- SecureLink: report to the administrator and block on this phone (App Review guideline 1.2, as iOS) -->
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/context_menu_action_label_style"
+                        android:id="@+id/action_report"
+                        android:onClick="@{() -> viewModel.reportContact()}"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="@drawable/action_background_top"
+                        android:text="@string/securelink_report_message"
+                        android:drawableStart="@drawable/warning_circle"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/actions"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:background="?attr/color_separator"
+                        android:importantForAccessibility="no"
+                        app:layout_constraintEnd_toEndOf="@id/action_report"
+                        app:layout_constraintStart_toStartOf="@id/action_report"
+                        app:layout_constraintTop_toBottomOf="@+id/action_report"/>
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        style="@style/context_menu_danger_action_label_style"
+                        android:id="@+id/action_block"
+                        android:onClick="@{() -> viewModel.toggleBlocked()}"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="@drawable/action_background_bottom"
+                        android:text="@{viewModel.isBlocked ? @string/securelink_unblock_contact : @string/securelink_block_contact, default=@string/securelink_block_contact}"
+                        android:drawableStart="@drawable/user_circle_minus"
+                        app:layout_constraintWidth_max="@dimen/section_max_width"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/action_report"/>
 
                     <View
                         android:layout_width="0dp"

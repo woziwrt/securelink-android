@@ -46,6 +46,7 @@ import org.linphone.ui.main.viewmodel.AbstractMainViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 import java.text.Collator
 import java.util.Locale
 
@@ -228,6 +229,8 @@ class ConversationsListViewModel
             account?.filterChatRooms(filter)
         }
         for (chatRoom in chatRooms.orEmpty()) {
+            // SecureLink: a conversation with a contact blocked on this phone is not listed (as iOS)
+            if (SecureLinkAdmin.isBlockedRoom(coreContext.core, chatRoom)) continue
             val model = ConversationModel(chatRoom)
             list.add(ConversationModelWrapper(model))
         }
@@ -243,6 +246,7 @@ class ConversationsListViewModel
 
     @WorkerThread
     private fun addChatRoom(chatRoom: ChatRoom) {
+        if (SecureLinkAdmin.isBlockedRoom(coreContext.core, chatRoom)) return
         val identifier = chatRoom.identifier
         val chatRoomAccount = chatRoom.account
         val defaultAccount = LinphoneUtils.getDefaultAccount()

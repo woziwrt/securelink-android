@@ -949,4 +949,11 @@
     <string name="securelink_sas_no_match">Nesouhlasí</string>
     <string name="securelink_report_message">Nahlásit správci</string>
     <string name="securelink_report_message_draft">⚠️ Nahlášení zprávy od: %1$s (%2$s), %3$s\nZpráva: „%4$s“\nCo se stalo:\u0020</string>
+    <string name="securelink_report_contact_draft">⚠️ Nahlášení uživatele: %1$s (%2$s)\nCo se stalo:\u0020</string>
+    <string name="securelink_block_contact">Zablokovat</string>
+    <string name="securelink_unblock_contact">Odblokovat</string>
+    <string name="securelink_block_report_draft">🚫 Automatické hlášení: na svém telefonu jsem zablokoval(a) %1$s (%2$s).</string>
+    <string name="securelink_contact_blocked_toast">Kontakt zablokován: jeho hovory a zprávy k vám už nedorazí a správce dostal hlášení.</string>
+    <string name="securelink_contact_unblocked_toast">Kontakt odblokován</string>
+    <string name="securelink_contact_is_blocked_toast">Tento kontakt je zablokovaný. Chcete-li mu volat nebo psát, odblokujte ho na jeho kartě.</string>
 </resources>

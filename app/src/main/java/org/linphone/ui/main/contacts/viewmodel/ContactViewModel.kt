@@ -51,6 +51,7 @@ import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class ContactViewModel
     @UiThread
@@ -78,6 +79,8 @@ class ContactViewModel
     val title = MutableLiveData<String>()
 
     val isFavourite = MutableLiveData<Boolean>()
+
+    val isBlocked = MutableLiveData<Boolean>()
 
     val showBackButton = MutableLiveData<Boolean>()
 
@@ -318,6 +321,7 @@ class ContactViewModel
     @WorkerThread
     fun refreshContactInfo() {
         isFavourite.postValue(friend.starred)
+        isBlocked.postValue(SecureLinkAdmin.isBlocked(coreContext.core, friend.address))
         // Do not show edit contact button for contacts not stored in a FriendList or
         // if they are in a temporary one (for example if they are from a remote directory such as LDAP or CardDAV)
         isStored.postValue(!coreContext.contactsManager.isContactTemporary(friend))
@@ -435,6 +439,34 @@ class ContactViewModel
         }
     }
 
+    // SecureLink: report to the administrator and block on this phone (App Review guideline 1.2, as iOS)
+    @UiThread
+    fun reportContact() {
+        coreContext.postOnCoreThread { core ->
+            val address = friend.address ?: return@postOnCoreThread
+            val draft = SecureLinkAdmin.reportContactDraft(friend.name.orEmpty(), address)
+            SecureLinkAdmin.openAdminConversation(core, draft, { conversationId ->
+                goToConversationEvent.postValue(Event(conversationId))
+            }, {
+                coreContext.showRedToastEvent.postValue(
+                    Event(Pair(R.string.conversation_failed_to_create_toast, R.drawable.warning_circle))
+                )
+            })
+        }
+    }
+
+    @UiThread
+    fun toggleBlocked() {
+        coreContext.postOnCoreThread { core ->
+            val address = friend.address ?: return@postOnCoreThread
+            val block = !SecureLinkAdmin.isBlocked(core, address)
+            SecureLinkAdmin.setBlocked(core, address, block, friend.name.orEmpty())
+            isBlocked.postValue(block)
+            val message = if (block) R.string.securelink_contact_blocked_toast else R.string.securelink_contact_unblocked_toast
+            coreContext.showGreenToastEvent.postValue(Event(Pair(message, R.drawable.check)))
+        }
+    }
+
     @UiThread
     fun startAudioCall() {
         coreContext.postOnCoreThread {
@@ -498,6 +530,7 @@ class ContactViewModel
     @WorkerThread
     private fun goToConversation(remote: Address) {
         val core = coreContext.core
+        if (SecureLinkAdmin.refuseIfBlocked(core, remote)) return // SecureLink: unblock first
         val account = core.defaultAccount
         val localSipUri = account?.params?.identityAddress?.asStringUriOnly()
         if (!localSipUri.isNullOrEmpty()) {

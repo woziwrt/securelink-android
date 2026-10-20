@@ -54,12 +54,12 @@ import org.linphone.core.tools.Log
 import org.linphone.notifications.NotificationsManager
 import org.linphone.telecom.TelecomManager
 import org.linphone.utils.ActivityMonitor
-import org.linphone.utils.SecureLinkAdmin
 import org.linphone.utils.AppUtils
 import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class CoreContext
     @UiThread
@@ -231,6 +231,13 @@ class CoreContext
             chatRoom: ChatRoom,
             messages: Array<out ChatMessage?>
         ) {
+            // SecureLink: messages from a contact blocked on this phone are dropped (as iOS)
+            for (message in messages) {
+                if (message != null && SecureLinkAdmin.isBlockedMessage(core, message)) {
+                    Log.i("$TAG Dropping a message from a contact blocked on this phone")
+                    chatRoom.deleteMessage(message)
+                }
+            }
             if (corePreferences.makePublicMediaFilesDownloaded && core.maxSizeForAutoDownloadIncomingFiles >= 0) {
                 for (message in messages) {
                     // Never do auto media export for ephemeral messages!
@@ -340,6 +347,12 @@ class CoreContext
             )
             when (currentState) {
                 Call.State.IncomingReceived -> {
+                    // SecureLink: a contact blocked on this phone never rings (as iOS)
+                    if (SecureLinkAdmin.isBlocked(core, call.remoteAddress)) {
+                        Log.i("$TAG Declining a call from a contact blocked on this phone")
+                        call.decline(Reason.Declined)
+                        return
+                    }
                     if (corePreferences.autoAnswerEnabled) {
                         val autoAnswerDelay = corePreferences.autoAnswerDelay
                         if (autoAnswerDelay == 0) {
@@ -1039,6 +1052,8 @@ class CoreContext
         localAddress: Address? = null,
         skipNetworkReachabilityTest: Boolean = false
     ) {
+        if (SecureLinkAdmin.refuseIfBlocked(core, address)) return // SecureLink: unblock first
+
         if (!skipNetworkReachabilityTest && !core.isNetworkReachable) {
             Log.e("$TAG Network unreachable, abort outgoing call")
             return

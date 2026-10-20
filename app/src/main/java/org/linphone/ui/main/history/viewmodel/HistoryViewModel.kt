@@ -39,6 +39,7 @@ import org.linphone.ui.main.history.model.CallLogModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAdmin
 
 class HistoryViewModel
     @UiThread
@@ -215,6 +216,7 @@ class HistoryViewModel
     fun goToConversation() {
         coreContext.postOnCoreThread { core ->
             if (!::address.isInitialized) return@postOnCoreThread
+            if (SecureLinkAdmin.refuseIfBlocked(core, address)) return@postOnCoreThread // SecureLink: unblock first
 
             val account = core.defaultAccount
             val localSipUri = account?.params?.identityAddress?.asStringUriOnly()
