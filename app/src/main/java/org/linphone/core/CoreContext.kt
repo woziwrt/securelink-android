@@ -295,6 +295,9 @@ class CoreContext
                 // SecureLink: the SDK's own auto-download always writes to the shared "Android/data" folder (Android
                 // platform helper ignores Factory.setDownloadDir) – the app downloads itself, to its private storage
                 core.maxSizeForAutoDownloadIncomingFiles = -1
+                // SecureLink: a call never goes back to clear – ZRTP GoClear (RFC 6189 5.11) stays off whatever a
+                // profile says (the SDK is built with it; default is off)
+                core.config.setBool("sip", "enable_go_clear", false)
             } else if (state == GlobalState.Shutdown) {
                 onCoreStopped()
             }
