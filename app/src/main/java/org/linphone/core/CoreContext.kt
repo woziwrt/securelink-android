@@ -1332,26 +1332,11 @@ class CoreContext
 
     @WorkerThread
     fun computeUserAgent() {
-        val savedDeviceName = corePreferences.deviceName
-        val deviceName = if (savedDeviceName.isEmpty()) {
-            Log.i("$TAG Device name not fetched yet, doing it now")
-            AppUtils.getDeviceName(context)
-        } else if (savedDeviceName.contains("'")) {
-            // Some VoIP providers such as voip.ms seem to not like apostrophe in user-agent
-            // https://github.com/BelledonneCommunications/linphone-android/issues/2287
-            Log.i("$TAG Found an apostrophe in device name, removing it")
-            savedDeviceName.replace("'", "")
-        } else {
-            savedDeviceName
-        }
-        if (savedDeviceName != deviceName) {
-            corePreferences.deviceName = deviceName
-        }
-        Log.i("$TAG Device name for user-agent is [$deviceName]")
-
         val appName = context.getString(org.linphone.R.string.app_name)
         val androidVersion = BuildConfig.VERSION_NAME
-        val userAgent = "${appName}Android/$androidVersion ($deviceName) LinphoneSDK"
+        // SecureLink: the user-agent reaches the server with every registration, so no device name in it (Samsung's
+        // default is "<model> of <owner's name>") – just the platform, as iOS sends "(iPhone)"
+        val userAgent = "${appName}Android/$androidVersion (Android) LinphoneSDK"
         val sdkVersion = context.getString(R.string.linphone_sdk_version)
         val sdkBranch = context.getString(R.string.linphone_sdk_branch)
         val sdkUserAgent = "$sdkVersion ($sdkBranch)"
