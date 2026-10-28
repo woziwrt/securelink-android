@@ -401,8 +401,18 @@ class CurrentCallViewModel
                     // MediaEncryption None & SRTP won't be notified through onEncryptionChanged callback,
                     // we have to do it manually to leave the "wait for encryption" state
                     when (call.currentParams.mediaEncryption) {
-                        MediaEncryption.SRTP, MediaEncryption.None -> {
+                        MediaEncryption.SRTP -> {
                             updateEncryption()
+                        }
+                        MediaEncryption.None -> {
+                            // SecureLink: ZRTP is mandatory, so None here only means the ZRTP handshake
+                            // hasn't finished yet – keep "waiting for encryption" instead of flashing
+                            // "not encrypted"; onEncryptionChanged updates it, a failed ZRTP ends the call
+                            if (call.core.isMediaEncryptionMandatory) {
+                                Log.i("$TAG SecureLink: streams running, waiting for ZRTP to finish")
+                            } else {
+                                updateEncryption()
+                            }
                         }
                         else -> {}
                     }
