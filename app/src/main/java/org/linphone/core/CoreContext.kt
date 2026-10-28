@@ -107,6 +107,11 @@ class CoreContext
         MutableLiveData()
     }
 
+    // SecureLink: the server refused this phone's sign-in (new invitation or blocked) – told once, no password dialog
+    val signedOutByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
     val clearAuthenticationRequestDialogEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
     }
@@ -581,12 +586,21 @@ class CoreContext
                         return
                     }
 
-                    val identity = "${authInfo.username}@${authInfo.domain}"
-                    Log.i(
-                        "$TAG Authentication requested method is HttpDigest, showing dialog asking user for password for identity [$identity]"
+                    // SecureLink: people never have a password to type – the only way the server refuses the
+                    // stored one is a new invitation (new password) or a block. Linphone's password dialog came back
+                    // after every dismissal (28. 10.: it flashed endlessly on the Galaxy). Stop registering instead –
+                    // retries would only feed the server's flood protection – and say once what happened; the next
+                    // invitation link or QR code provisions the account again.
+                    Log.w(
+                        "$TAG SecureLink: sign-in of [${authInfo.username}@${authInfo.domain}] refused, phone signed out by the administrator"
                     )
-                    digestAuthInfoPendingPasswordUpdate = authInfo
-                    digestAuthenticationRequestedEvent.postValue(Event(identity))
+                    core.abortAuthentication(authInfo)
+                    if (accountFound.params.isRegisterEnabled) {
+                        val params = accountFound.params.clone()
+                        params.isRegisterEnabled = false
+                        accountFound.params = params
+                        signedOutByAdministratorEvent.postValue(Event(true))
+                    }
                 }
                 AuthMethod.Tls -> {
                     Log.w("$TAG Authentication requested method is TLS, not doing anything...")

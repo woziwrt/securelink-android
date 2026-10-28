@@ -77,6 +77,7 @@ import org.linphone.ui.main.viewmodel.MainViewModel
 import org.linphone.ui.main.viewmodel.SharedMainViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.DialogUtils
+import org.linphone.utils.ConfirmationDialogModel
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
@@ -356,6 +357,22 @@ class MainActivity : GenericActivity() {
                 intent.putExtra(SingleSignOnActivity.INTENT_EXTRA_USERNAME, username)
                 intent.putExtra(SingleSignOnActivity.INTENT_EXTRA_SERVER_URL, serverUrl)
                 startActivity(intent)
+            }
+        }
+
+        coreContext.signedOutByAdministratorEvent.observe(this) {
+            it.consume {
+                val model = ConfirmationDialogModel()
+                val dialog = DialogUtils.getSecureLinkConfirmDialog(
+                    this,
+                    model,
+                    getString(R.string.securelink_signed_out_title),
+                    getString(R.string.securelink_signed_out_message),
+                    getString(R.string.securelink_signed_out_ok)
+                )
+                model.dismissEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
+                model.confirmEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
+                dialog.show()
             }
         }
 
