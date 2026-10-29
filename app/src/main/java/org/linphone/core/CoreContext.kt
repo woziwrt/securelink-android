@@ -1347,7 +1347,9 @@ class CoreContext
     @WorkerThread
     fun computeUserAgent() {
         val appName = context.getString(org.linphone.R.string.app_name)
-        val androidVersion = BuildConfig.VERSION_NAME
+        // SecureLink: the full version (6.2.8.49, without the commit hash) – the admin web compares it with the APK
+        // the server gives out and shows who still has an older app
+        val androidVersion = context.getString(org.linphone.R.string.linphone_app_version).substringBefore('+')
         // SecureLink: the user-agent reaches the server with every registration, so no device name in it (Samsung's
         // default is "<model> of <owner's name>") – just the platform, as iOS sends "(iPhone)"
         val userAgent = "${appName}Android/$androidVersion (Android) LinphoneSDK"

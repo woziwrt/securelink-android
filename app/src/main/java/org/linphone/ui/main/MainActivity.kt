@@ -40,6 +40,7 @@ import androidx.annotation.UiThread
 import androidx.car.app.connection.CarConnection
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
@@ -528,6 +529,7 @@ class MainActivity : GenericActivity() {
         viewModel.updateAccountsAndNetworkReachability()
         showTermsAfterLogin()
         askPermissionsAfterLogin()
+        offerNewVersion()
         // SecureLink: the directory is fresh on every foreground and every 5 minutes while the app is open (as iOS)
         directoryRefresh.run()
     }
@@ -547,6 +549,61 @@ class MainActivity : GenericActivity() {
             val termsUrl = SecureLinkAdmin.setting(core, "terms_url")
             coreContext.postOnMainThread { SecureLinkTerms.showIfNeeded(this, termsUrl) }
         }
+    }
+
+    // SecureLink: the app comes from the customer's own server, not from Google Play – ask that server at most every
+    // 6 hours whether it gives out a newer version; "Later" keeps quiet about that version for a day
+    private var updateDialogShown = false
+    private fun offerNewVersion() {
+        if (updateDialogShown) return
+        val mine = getString(R.string.linphone_app_version)
+        coreContext.postOnCoreThread { core ->
+            if (core.accountList.isEmpty()) return@postOnCoreThread
+            val now = (System.currentTimeMillis() / 1000).toInt()
+            if (now - core.config.getInt("securelink", "update_checked", 0) < 6 * 3600) return@postOnCoreThread
+            core.config.setInt("securelink", "update_checked", now)
+            SecureLinkAdmin.checkForUpdate(core, mine) { update ->
+                if (update == null) return@checkForUpdate
+                coreContext.postOnCoreThread { c ->
+                    val later = c.config.getInt("securelink", "update_later_${update.version}", 0)
+                    if (now - later < 24 * 3600) return@postOnCoreThread
+                    coreContext.postOnMainThread { showNewVersion(update) }
+                }
+            }
+        }
+    }
+
+    private fun showNewVersion(update: SecureLinkAdmin.AppUpdate) {
+        if (updateDialogShown || isFinishing) return
+        updateDialogShown = true
+        val model = ConfirmationDialogModel()
+        val dialog = DialogUtils.getSecureLinkConfirmDialog(
+            this,
+            model,
+            getString(R.string.securelink_update_title),
+            getString(R.string.securelink_update_message, update.version.substringBefore('+')),
+            getString(R.string.securelink_update_download)
+        )
+        model.dismissEvent.observe(this) { e ->
+            e.consume {
+                coreContext.postOnCoreThread { c ->
+                    c.config.setInt("securelink", "update_later_${update.version}", (System.currentTimeMillis() / 1000).toInt())
+                }
+                dialog.dismiss()
+            }
+        }
+        model.confirmEvent.observe(this) { e ->
+            e.consume {
+                dialog.dismiss()
+                try {
+                    // the browser downloads it like the first time; opening the file installs it over this version
+                    startActivity(Intent(Intent.ACTION_VIEW, update.link.toUri()))
+                } catch (ex: Exception) {
+                    Log.e("$TAG No browser for the update link: $ex")
+                }
+            }
+        }
+        dialog.show()
     }
 
     private fun askPermissionsAfterLogin() {

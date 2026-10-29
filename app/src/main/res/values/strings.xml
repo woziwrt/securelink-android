@@ -1078,6 +1078,9 @@
     <string name="securelink_signed_out_title">This phone was signed out</string>
     <string name="securelink_signed_out_message">Your administrator sent you a new invitation or blocked this phone. To sign in again, open the link from the invitation or scan the new code.</string>
     <string name="securelink_signed_out_ok">I understand</string>
+    <string name="securelink_update_title">New version of SecureLink</string>
+    <string name="securelink_update_message">Your administrator has a new version of the app (%1$s). Download it and open the file when it is done – it installs over this version, you keep your messages and stay signed in.</string>
+    <string name="securelink_update_download">Download</string>
     <string name="securelink_sas_no_match">No match</string>
     <string name="securelink_report_message">Report to administrator</string>
     <string name="securelink_report_message_draft">⚠️ Report of a message from: %1$s (%2$s), %3$s\nMessage: “%4$s”\nWhat happened:\u0020</string>

@@ -269,14 +269,21 @@ object SecureLinkAdmin {
     }
 
     /** RFC 7616 digest (SHA-256, qop=auth) answering [challenge] – the server is /opt/securelink/www/sl-auth.php */
-    fun digestAuthorization(challenge: String, user: String, ha1: String, uri: String, cnonce: String): String? {
+    fun digestAuthorization(
+        challenge: String,
+        user: String,
+        ha1: String,
+        uri: String,
+        cnonce: String,
+        method: String = "POST"
+    ): String? {
         val fields = Regex("(\\w+)=\"?([^\",]*)\"?").findAll(challenge).associate { it.groupValues[1] to it.groupValues[2] }
         val realm = fields["realm"].orEmpty()
         val nonce = fields["nonce"].orEmpty()
         val opaque = fields["opaque"].orEmpty()
         if (ha1.isEmpty() || nonce.isEmpty()) return null
         val nc = "00000001"
-        val response = sha256("$ha1:$nonce:$nc:$cnonce:auth:" + sha256("POST:$uri"))
+        val response = sha256("$ha1:$nonce:$nc:$cnonce:auth:" + sha256("$method:$uri"))
         return "Digest username=\"$user\", realm=\"$realm\", nonce=\"$nonce\", uri=\"$uri\", " +
             "algorithm=SHA-256, qop=auth, nc=$nc, cnonce=\"$cnonce\", response=\"$response\", opaque=\"$opaque\""
     }
@@ -401,6 +408,109 @@ object SecureLinkAdmin {
     fun enforceDisappearing(core: Core) {
         for (room in core.chatRooms) {
             enforceDisappearing(core, room)
+        }
+    }
+
+    // --- new version of the app: Android gets SecureLink from its own server (no Google Play), so the app asks the
+    // server once in a while whether it gives out a newer APK. The server answers only a signed-in member (digest, as
+    // the deletion request) with the version and an unguessable download link; the phone's browser downloads it and
+    // Android installs it over this one (same signing key).
+
+    /** The server's answer: version (e.g. 6.2.8.49+4aaa8efed) and the download link */
+    class AppUpdate(val version: String, val link: String)
+
+    /** 6.2.8.49+4aaa8efed → [6, 2, 8, 49]: the part before "+" compared number by number */
+    private fun versionParts(version: String): List<Int> {
+        return version.substringBefore('+').split('.').map { it.toIntOrNull() ?: 0 }
+    }
+
+    fun isNewer(server: String, mine: String): Boolean {
+        val a = versionParts(server)
+        val b = versionParts(mine)
+        for (i in 0 until maxOf(a.size, b.size)) {
+            val x = a.getOrElse(i) { 0 }
+            val y = b.getOrElse(i) { 0 }
+            if (x != y) return x > y
+        }
+        return false
+    }
+
+    /** https://<install site>/android/latest – the same host as request_url, so phones signed in before this setting have it too */
+    @WorkerThread
+    private fun updateUrl(core: Core): String {
+        val explicit = setting(core, "update_url")
+        if (explicit.isNotEmpty()) return explicit
+        val request = setting(core, "request_url")
+        if (request.isEmpty()) return ""
+        return try {
+            val u = URL(request)
+            URL(u.protocol, u.host, u.port, "/android/latest").toString()
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    @WorkerThread
+    fun checkForUpdate(core: Core, mine: String, done: (AppUpdate?) -> Unit) {
+        val link = updateUrl(core)
+        val auth = core.defaultAccount?.findAuthInfo()
+        val user = auth?.username.orEmpty()
+        if (link.isEmpty() || auth == null || user.isEmpty()) {
+            done(null)
+            return
+        }
+        val storedHa1 = if (auth.algorithm.orEmpty().uppercase() == "SHA-256") auth.ha1.orEmpty() else ""
+        val password = auth.password.orEmpty()
+        Thread {
+            val update = try {
+                val url = URL(link)
+                var answer = getUpdate(url, null)
+                if (answer.first == 401 && answer.second != null) {
+                    val challenge = answer.second.orEmpty()
+                    val realm = Regex("realm=\"([^\"]*)\"").find(challenge)?.groupValues?.get(1).orEmpty()
+                    val ha1 = storedHa1.ifEmpty { if (password.isEmpty()) "" else sha256("$user:$realm:$password") }
+                    val cnonce = UUID.randomUUID().toString().replace("-", "")
+                    val header = digestAuthorization(challenge, user, ha1, url.path, cnonce, "GET")
+                    if (header != null) answer = getUpdate(url, header)
+                }
+                if (answer.first == 200) {
+                    val json = org.json.JSONObject(answer.third)
+                    val version = json.optString("version")
+                    val apk = json.optString("url")
+                    // only from the install site itself: a link elsewhere would be somebody else's file
+                    if (version.isNotEmpty() && URL(apk).host == url.host && URL(apk).protocol == "https" &&
+                        isNewer(version, mine)
+                    ) {
+                        AppUpdate(version, apk)
+                    } else {
+                        null
+                    }
+                } else {
+                    Log.i("$TAG Update check answered [${answer.first}]")
+                    null
+                }
+            } catch (e: Exception) {
+                Log.w("$TAG Update check failed: $e")
+                null
+            }
+            if (update != null) Log.i("$TAG The server gives out a newer app [${update.version}], this is [$mine]")
+            done(update)
+        }.start()
+    }
+
+    /** (HTTP status, WWW-Authenticate challenge, body) */
+    private fun getUpdate(url: URL, authorization: String?): Triple<Int, String?, String> {
+        val connection = url.openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 30_000
+            connection.readTimeout = 30_000
+            if (authorization != null) connection.setRequestProperty("Authorization", authorization)
+            val code = connection.responseCode
+            val body = if (code == 200) connection.inputStream.bufferedReader().use { it.readText() } else ""
+            return Triple(code, connection.getHeaderField("WWW-Authenticate"), body)
+        } finally {
+            connection.disconnect()
         }
     }
 }
