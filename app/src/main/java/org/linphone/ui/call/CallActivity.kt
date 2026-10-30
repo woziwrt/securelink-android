@@ -368,16 +368,8 @@ class CallActivity : GenericActivity() {
             showRedToast(getString(message), icon)
         }
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.e("$TAG CAMERA permission isn't granted")
-            val message = R.string.call_camera_permission_not_granted_toast
-            val icon = R.drawable.warning_circle
-            showRedToast(getString(message), icon)
-        }
+        // SecureLink: no camera warning – video is off in the core, calls never need the camera (30. 10.: the red
+        // "camera permission denied" scared the tester on every call)
     }
 
     override fun onResume() {
