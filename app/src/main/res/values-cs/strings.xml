@@ -951,7 +951,7 @@
     <string name="securelink_signed_out_message">Správce vám poslal novou pozvánku nebo tento telefon zablokoval. Pro nové přihlášení otevřete odkaz z pozvánky nebo naskenujte nový kód.</string>
     <string name="securelink_signed_out_ok">Rozumím</string>
     <string name="securelink_permissions_title">Mikrofon a oznámení</string>
-    <string name="securelink_permissions_message">SecureLink potřebuje mikrofon pro hovory a oznámení, aby telefon zazvonil a ukázal novou zprávu, i když je aplikace zavřená. V dalším okně prosím povolte obojí.</string>
+    <string name="securelink_permissions_message">SecureLink potřebuje mikrofon pro hovory a oznámení, aby telefon zazvonil a ukázal novou zprávu, i když je aplikace zavřená. Android se pak zeptá, jestli smí SecureLink „nahrávat zvuk“ – takhle Android nazývá mikrofon, SecureLink hovory nenahrává. Zvolte „Při používání aplikace“ a povolte i oznámení.</string>
     <string name="securelink_permissions_ok">Pokračovat</string>
     <string name="securelink_permissions_settings_message">Mikrofon nebo oznámení jsou pro SecureLink vypnuté a telefon se už sám nezeptá. Klepněte na Otevřít nastavení, pak na Oprávnění a povolte mikrofon a oznámení.</string>
     <string name="securelink_permissions_settings_ok">Otevřít nastavení</string>
