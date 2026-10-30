@@ -273,7 +273,7 @@
                     android:layout_marginTop="40dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
-                    android:text="@string/assistant_scan_qr_code"
+                    android:text="@string/securelink_landing_have_qr"
                     android:drawableStart="@drawable/qr_code"
                     android:drawablePadding="8dp"
                     app:drawableTint="@color/white"

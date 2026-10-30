@@ -477,8 +477,8 @@
     <string name="history_dialog_delete_call_log_message">Only this entry will be removed.</string>
 
     <!-- Contacts -->
-    <string name="contacts_list_empty">No contact for the moment…</string>
-    <string name="contacts_list_sip_empty">No SIP contact for the moment…</string>
+    <string name="contacts_list_empty">Nobody here yet. As soon as your administrator adds more people from your group, they will appear here.</string>
+    <string name="contacts_list_sip_empty">Nobody here yet. As soon as your administrator adds more people from your group, they will appear here.</string>
     <string name="contacts_change_filter_label">Change filter</string>
     <string name="contacts_list_favourites_title">Favourites</string>
     <string name="contacts_list_all_contacts_title">All contacts</string>
@@ -1070,14 +1070,18 @@
             com.google.android.apps.automotive.templates.host</item>
         </string-array>
     <!-- SecureLink -->
-    <string name="securelink_landing_intro">Communication only within your circle.\nYour administrator gives you your account as a QR code.</string>
+    <string name="securelink_landing_intro">Communication only within your circle.\n\nTo sign in, open the message from your administrator again and tap the link in it. The page recognises you and offers to open SecureLink and sign you in.</string>
     <string name="securelink_landing_nothing_else">There is nothing else to set up.</string>
+    <string name="securelink_landing_have_qr">I have a QR code from my administrator</string>
     <string name="securelink_sas_message">Read the security word to each other. It must be the same on both phones.</string>
     <string name="securelink_sas_message_new_device">The other person has a new device. Read the security word to each other and confirm that it matches.</string>
     <string name="securelink_sas_it_matches">It matches</string>
     <string name="securelink_signed_out_title">This phone was signed out</string>
     <string name="securelink_signed_out_message">Your administrator sent you a new invitation or blocked this phone. To sign in again, open the link from the invitation or scan the new code.</string>
     <string name="securelink_signed_out_ok">I understand</string>
+    <string name="securelink_permissions_title">Microphone and notifications</string>
+    <string name="securelink_permissions_message">SecureLink needs the microphone for calls and notifications so that your phone rings and shows new messages even when the app is closed. Please allow both in the next window.</string>
+    <string name="securelink_permissions_ok">Continue</string>
     <string name="securelink_update_title">New version of SecureLink</string>
     <string name="securelink_update_message">Your administrator has a new version of the app (%1$s). Download it and open the file when it is done – it installs over this version, you keep your messages and stay signed in.</string>
     <string name="securelink_update_download">Download</string>

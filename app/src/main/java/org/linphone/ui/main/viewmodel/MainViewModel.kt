@@ -243,7 +243,7 @@ class MainViewModel
                         )
                         addAlert(NON_DEFAULT_ACCOUNT_NOT_CONNECTED, label)
                     }
-                    checkAccessLocalNetworkPermission()
+                    // SecureLink: no local network permission request – the server is never on the local network
                 }
                 RegistrationState.Ok -> {
                     removeAlert(NETWORK_NOT_REACHABLE) // Just in case

@@ -66,6 +66,10 @@ class CoreContext
     constructor(val context: Context) : HandlerThread("Core Thread") {
     companion object {
         private const val TAG = "[Core Context]"
+
+        // SecureLink: a sign-out needs a second refusal from a later registration attempt
+        private const val SIGN_IN_REFUSAL_GAP = 20_000L
+        private const val SIGN_IN_REFUSAL_WINDOW = 30 * 60_000L
     }
 
     lateinit var core: Core
@@ -111,6 +115,9 @@ class CoreContext
     val signedOutByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData<Event<Boolean>>()
     }
+
+    // SecureLink: when the server first refused each identity's stored password – one refusal is not enough to sign out
+    private val firstSignInRefusal = HashMap<String, Long>()
 
     val clearAuthenticationRequestDialogEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -591,10 +598,24 @@ class CoreContext
                     // after every dismissal (28. 10.: it flashed endlessly on the Galaxy). Stop registering instead –
                     // retries would only feed the server's flood protection – and say once what happened; the next
                     // invitation link or QR code provisions the account again.
-                    Log.w(
-                        "$TAG SecureLink: sign-in of [${authInfo.username}@${authInfo.domain}] refused, phone signed out by the administrator"
-                    )
+                    // But not on the first refusal (29. 10.: a phone was signed out by a single one while the server
+                    // still had the old password cached): only when the server refuses again in a later attempt, at least
+                    // SIGN_IN_REFUSAL_GAP after the first one and within SIGN_IN_REFUSAL_WINDOW.
+                    val identity = "${authInfo.username}@${authInfo.domain}"
                     core.abortAuthentication(authInfo)
+                    val now = System.currentTimeMillis()
+                    val first = firstSignInRefusal[identity]
+                    if (first == null || now - first > SIGN_IN_REFUSAL_WINDOW) {
+                        Log.w("$TAG SecureLink: sign-in of [$identity] refused once, trying again later before signing out")
+                        firstSignInRefusal[identity] = now
+                        return
+                    }
+                    if (now - first < SIGN_IN_REFUSAL_GAP) {
+                        Log.w("$TAG SecureLink: sign-in of [$identity] refused again in the same attempt, waiting")
+                        return
+                    }
+                    Log.w("$TAG SecureLink: sign-in of [$identity] refused twice, phone signed out by the administrator")
+                    firstSignInRefusal.remove(identity)
                     if (accountFound.params.isRegisterEnabled) {
                         val params = accountFound.params.clone()
                         params.isRegisterEnabled = false
@@ -618,6 +639,9 @@ class CoreContext
             state: RegistrationState?,
             message: String
         ) {
+            if (state == RegistrationState.Ok) {
+                account.params.identityAddress?.let { firstSignInRefusal.remove("${it.username}@${it.domain}") }
+            }
             // SecureLink: the push token arrives a moment after the account, so the account was added "without push"
             // and the keep-alive foreground service went on. Registered with push now – it is no longer needed.
             if (state == RegistrationState.Ok && account.params.isPushNotificationAvailable &&

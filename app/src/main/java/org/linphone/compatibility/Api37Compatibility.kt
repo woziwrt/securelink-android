@@ -34,8 +34,7 @@ class Api37Compatibility {
             return arrayOf(
                 Manifest.permission.POST_NOTIFICATIONS,
                 Manifest.permission.RECORD_AUDIO,
-                Manifest.permission.CAMERA,
-                Manifest.permission.ACCESS_LOCAL_NETWORK
+                Manifest.permission.CAMERA // SecureLink: no ACCESS_LOCAL_NETWORK, see AndroidManifest.xml
             )
         }
 

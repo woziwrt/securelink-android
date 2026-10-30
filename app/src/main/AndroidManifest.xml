@@ -40,8 +40,9 @@
     and can't be used with RECEIVE_BOOT_COMPLETED intent either -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
-    <!-- Required starting Android 17 to be able to connect to local network server -->
-    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- SecureLink: no ACCESS_LOCAL_NETWORK – our servers are always on the internet, and Android shows it as the scary
+         "Nearby devices" request; calls between two phones on the same Wi-Fi go through the relay instead -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" tools:node="remove" />
 
     <!-- Needed for auto start at boot if keep alive service is enabled -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

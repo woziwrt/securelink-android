@@ -39,6 +39,7 @@ if (crashlyticsAvailable) {
 
 var gitVersion = "6.2.8"
 var gitBranch = ""
+var gitCommits = 0 // SecureLink: the NN of 6.2.8.NN, also the end of versionCode
 try {
     val gitDescribe = ProcessBuilder()
         .command("git", "describe", "--abbrev=0")
@@ -72,6 +73,7 @@ try {
         .trim()
     println("Git branch name: $gitBranch")
 
+    gitCommits = gitCommitsCount.toInt()
     gitVersion =
         if (gitCommitsCount.toInt() == 0) {
             gitDescribe
@@ -106,7 +108,9 @@ android {
         applicationId = packageName
         minSdk = 28
         targetSdk = 37
-        versionCode = 602008 // 6.02.008
+        // SecureLink: Google Play needs a higher versionCode for every upload – 6.2.8.NN → 6020080NN
+        // (always above the old fixed 602008, so phones with an older APK from the server still update)
+        versionCode = 602008000 + gitCommits
         versionName = "6.2.8"
 
         manifestPlaceholders["appAuthRedirectScheme"] = packageName

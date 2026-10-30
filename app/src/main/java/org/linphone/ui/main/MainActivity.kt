@@ -29,6 +29,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.os.Parcelable
 import android.view.Gravity
 import android.view.ViewTreeObserver
@@ -141,8 +142,21 @@ class MainActivity : GenericActivity() {
     ) { results ->
         Log.i("$TAG Permissions asked after login: $results")
         viewModel.updateMissingPermissionAlert()
+        // Android answers by itself, without a window, once the person refused twice – then only the app's
+        // settings page can turn the permission on
+        if (results.containsValue(false) && System.currentTimeMillis() - afterLoginPermissionsLaunchedAt < 500) {
+            Log.w("$TAG Permissions refused by the system without asking, opening the app settings")
+            try {
+                startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
+                )
+            } catch (ex: Exception) {
+                Log.e("$TAG No app settings page: $ex")
+            }
+        }
     }
     private var afterLoginPermissionsAsked = false
+    private var afterLoginPermissionsLaunchedAt = 0L
 
     // SecureLink: a login by link or QR happens while this activity is already resumed, so onResume() alone would
     // only ask at the next app start – ask as soon as the account registers for the first time
@@ -554,6 +568,7 @@ class MainActivity : GenericActivity() {
     // SecureLink: the app comes from the customer's own server, not from Google Play – ask that server at most every
     // 6 hours whether it gives out a newer version; "Later" keeps quiet about that version for a day
     private var updateDialogShown = false
+
     private fun offerNewVersion() {
         if (updateDialogShown) return
         val mine = getString(R.string.linphone_app_version)
@@ -620,8 +635,26 @@ class MainActivity : GenericActivity() {
                 }
                 afterLoginPermissionsAsked = true
                 if (missing.isNotEmpty()) {
+                    // SecureLink: at every start while something is missing, first in our own words why – the bare
+                    // system window gave people no reason to allow it (29. 10.)
                     Log.i("$TAG Asking for $missing after login")
-                    afterLoginPermissionsLauncher.launch(missing.toTypedArray())
+                    val model = ConfirmationDialogModel()
+                    val dialog = DialogUtils.getSecureLinkConfirmDialog(
+                        this,
+                        model,
+                        getString(R.string.securelink_permissions_title),
+                        getString(R.string.securelink_permissions_message),
+                        getString(R.string.securelink_permissions_ok)
+                    )
+                    model.dismissEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
+                    model.confirmEvent.observe(this) { e ->
+                        e.consume {
+                            dialog.dismiss()
+                            afterLoginPermissionsLaunchedAt = System.currentTimeMillis()
+                            afterLoginPermissionsLauncher.launch(missing.toTypedArray())
+                        }
+                    }
+                    dialog.show()
                 }
             }
         }

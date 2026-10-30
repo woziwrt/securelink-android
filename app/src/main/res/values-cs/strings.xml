@@ -409,7 +409,7 @@
     <string name="history_dialog_delete_all_call_logs_title">Opravdu si přejete smazat veškerou historii hovorů?</string>
     <string name="history_dialog_delete_call_logs_title">Opravdu si přejete smazat historii s touto osobou?</string>
     <string name="history_dialog_delete_call_logs_message">Z historie budou odstraněny všechny hovory.</string>
-    <string name="contacts_list_empty">Momentálně žádný kontakt…</string>
+    <string name="contacts_list_empty">Zatím tu nikdo není. Jakmile správce přidá další lidi z vaší skupiny, objeví se tady.</string>
     <string name="contacts_list_favourites_title">Oblíbené</string>
     <string name="contacts_list_all_contacts_title">Všechny kontakty</string>
     <string name="contacts_list_filter_popup_see_all">Zobrazit vše</string>
@@ -826,7 +826,7 @@
     <string name="meeting_failed_to_edit_schedule_toast">Úprava schůzky selhala!</string>
     <string name="settings_advanced_print_logs_crashlytics_title">Pomozte vývojářům řešit problémy odesláním protokolů do Crashlytics po pádu</string>
     <string name="settings_advanced_logs_upload_server_url">Adresa URL serveru pro sdílení logů</string>
-    <string name="contacts_list_sip_empty">Momentálně žádný SIP kontakt…</string>
+    <string name="contacts_list_sip_empty">Zatím tu nikdo není. Jakmile správce přidá další lidi z vaší skupiny, objeví se tady.</string>
     <string name="contacts_change_filter_label">Změnit filtr</string>
     <string name="help_about_contribute_translations_subtitle">Pomozte zpřístupnit aplikaci co největšímu počtu lidí.</string>
     <string name="help_about_user_guide_title">Průvodce &appName;</string>
@@ -941,14 +941,18 @@
     <string name="assistant_permissions_access_local_network_title"><b>Přístup k místní síti (volitelné):</b> Od verze Android 17 je toto oprávnění nutné pro připojení k serveru umístěnému v místní síti.</string>
     <string name="phone_number_copied_to_clipboard_toast">Telefonní číslo bylo zkopírováno do schránky</string>
     <!-- SecureLink -->
-    <string name="securelink_landing_intro">Komunikace jen uvnitř okruhu.\nÚčet dostanete od správce jako QR kód.</string>
+    <string name="securelink_landing_intro">Komunikace jen uvnitř okruhu.\n\nPro přihlášení otevřete znovu zprávu od správce a klepněte na odkaz v ní. Stránka vás pozná a nabídne „Otevřít SecureLink a přihlásit“.</string>
     <string name="securelink_landing_nothing_else">Nic dalšího nastavovat nemusíte.</string>
+    <string name="securelink_landing_have_qr">Mám QR kód od správce</string>
     <string name="securelink_sas_message">Řekněte si navzájem bezpečnostní slovo. Musí být na obou telefonech stejné.</string>
     <string name="securelink_sas_message_new_device">Druhá strana má nové zařízení. Řekněte si navzájem bezpečnostní slovo a potvrďte, že souhlasí.</string>
     <string name="securelink_sas_it_matches">Souhlasí</string>
     <string name="securelink_signed_out_title">Tento telefon byl odhlášen</string>
     <string name="securelink_signed_out_message">Správce vám poslal novou pozvánku nebo tento telefon zablokoval. Pro nové přihlášení otevřete odkaz z pozvánky nebo naskenujte nový kód.</string>
     <string name="securelink_signed_out_ok">Rozumím</string>
+    <string name="securelink_permissions_title">Mikrofon a oznámení</string>
+    <string name="securelink_permissions_message">SecureLink potřebuje mikrofon pro hovory a oznámení, aby telefon zazvonil a ukázal novou zprávu, i když je aplikace zavřená. V dalším okně prosím povolte obojí.</string>
+    <string name="securelink_permissions_ok">Pokračovat</string>
     <string name="securelink_update_title">Nová verze SecureLinku</string>
     <string name="securelink_update_message">Váš správce připravil novou verzi aplikace (%1$s). Stáhněte ji a po stažení soubor otevřete – nainstaluje se přes tuto verzi, zprávy ani přihlášení se neztratí.</string>
     <string name="securelink_update_download">Stáhnout</string>
