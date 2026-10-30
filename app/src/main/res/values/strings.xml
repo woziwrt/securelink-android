@@ -1082,6 +1082,8 @@
     <string name="securelink_permissions_title">Microphone and notifications</string>
     <string name="securelink_permissions_message">SecureLink needs the microphone for calls and notifications so that your phone rings and shows new messages even when the app is closed. Please allow both in the next window.</string>
     <string name="securelink_permissions_ok">Continue</string>
+    <string name="securelink_permissions_settings_message">The microphone or notifications are switched off for SecureLink and the phone will not ask again. Tap Open settings, then Permissions, and allow the microphone and notifications.</string>
+    <string name="securelink_permissions_settings_ok">Open settings</string>
     <string name="securelink_update_title">New version of SecureLink</string>
     <string name="securelink_update_message">Your administrator has a new version of the app (%1$s). Download it and open the file when it is done – it installs over this version, you keep your messages and stay signed in.</string>
     <string name="securelink_update_download">Download</string>

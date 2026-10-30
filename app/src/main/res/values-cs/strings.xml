@@ -953,6 +953,8 @@
     <string name="securelink_permissions_title">Mikrofon a oznámení</string>
     <string name="securelink_permissions_message">SecureLink potřebuje mikrofon pro hovory a oznámení, aby telefon zazvonil a ukázal novou zprávu, i když je aplikace zavřená. V dalším okně prosím povolte obojí.</string>
     <string name="securelink_permissions_ok">Pokračovat</string>
+    <string name="securelink_permissions_settings_message">Mikrofon nebo oznámení jsou pro SecureLink vypnuté a telefon se už sám nezeptá. Klepněte na Otevřít nastavení, pak na Oprávnění a povolte mikrofon a oznámení.</string>
+    <string name="securelink_permissions_settings_ok">Otevřít nastavení</string>
     <string name="securelink_update_title">Nová verze SecureLinku</string>
     <string name="securelink_update_message">Váš správce připravil novou verzi aplikace (%1$s). Stáhněte ji a po stažení soubor otevřete – nainstaluje se přes tuto verzi, zprávy ani přihlášení se neztratí.</string>
     <string name="securelink_update_download">Stáhnout</string>

@@ -142,21 +142,14 @@ class MainActivity : GenericActivity() {
     ) { results ->
         Log.i("$TAG Permissions asked after login: $results")
         viewModel.updateMissingPermissionAlert()
-        // Android answers by itself, without a window, once the person refused twice – then only the app's
-        // settings page can turn the permission on
-        if (results.containsValue(false) && System.currentTimeMillis() - afterLoginPermissionsLaunchedAt < 500) {
-            Log.w("$TAG Permissions refused by the system without asking, opening the app settings")
-            try {
-                startActivity(
-                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
-                )
-            } catch (ex: Exception) {
-                Log.e("$TAG No app settings page: $ex")
-            }
+        // Refused and Android will not ask again (refused twice, now or before) – only the settings page helps
+        val blocked = results.filter { !it.value && !shouldShowRequestPermissionRationale(it.key) }.keys
+        if (blocked.isNotEmpty()) {
+            Log.w("$TAG $blocked can no longer be asked for, offering the app settings")
+            showPermissionsDialog(blocked.toList(), true)
         }
     }
     private var afterLoginPermissionsAsked = false
-    private var afterLoginPermissionsLaunchedAt = 0L
 
     // SecureLink: a login by link or QR happens while this activity is already resumed, so onResume() alone would
     // only ask at the next app start – ask as soon as the account registers for the first time
@@ -635,29 +628,52 @@ class MainActivity : GenericActivity() {
                 }
                 afterLoginPermissionsAsked = true
                 if (missing.isNotEmpty()) {
-                    // SecureLink: at every start while something is missing, first in our own words why – the bare
-                    // system window gave people no reason to allow it (29. 10.)
-                    Log.i("$TAG Asking for $missing after login")
-                    val model = ConfirmationDialogModel()
-                    val dialog = DialogUtils.getSecureLinkConfirmDialog(
-                        this,
-                        model,
-                        getString(R.string.securelink_permissions_title),
-                        getString(R.string.securelink_permissions_message),
-                        getString(R.string.securelink_permissions_ok)
-                    )
-                    model.dismissEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
-                    model.confirmEvent.observe(this) { e ->
-                        e.consume {
-                            dialog.dismiss()
-                            afterLoginPermissionsLaunchedAt = System.currentTimeMillis()
-                            afterLoginPermissionsLauncher.launch(missing.toTypedArray())
-                        }
+                    // once asked and refused twice, Android shows no window any more – then straight to the settings
+                    val prefs = getSharedPreferences("securelink", MODE_PRIVATE)
+                    val blocked = missing.any {
+                        prefs.getBoolean("asked_$it", false) && !shouldShowRequestPermissionRationale(it)
                     }
-                    dialog.show()
+                    Log.i("$TAG Asking for $missing after login (blocked by Android: $blocked)")
+                    showPermissionsDialog(missing, blocked)
                 }
             }
         }
+    }
+
+    // SecureLink: at every start while microphone or notifications are missing, first in our own words why – the bare
+    // system window gave people no reason to allow it, and once refused twice it does not come at all (29.–30. 10.)
+    private fun showPermissionsDialog(missing: List<String>, toSettings: Boolean) {
+        val model = ConfirmationDialogModel()
+        val dialog = DialogUtils.getSecureLinkConfirmDialog(
+            this,
+            model,
+            getString(R.string.securelink_permissions_title),
+            getString(
+                if (toSettings) R.string.securelink_permissions_settings_message else R.string.securelink_permissions_message
+            ),
+            getString(if (toSettings) R.string.securelink_permissions_settings_ok else R.string.securelink_permissions_ok)
+        )
+        model.dismissEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
+        model.confirmEvent.observe(this) { e ->
+            e.consume {
+                dialog.dismiss()
+                if (toSettings) {
+                    try {
+                        startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
+                        )
+                    } catch (ex: Exception) {
+                        Log.e("$TAG No app settings page: $ex")
+                    }
+                } else {
+                    val prefs = getSharedPreferences("securelink", MODE_PRIVATE).edit()
+                    missing.forEach { prefs.putBoolean("asked_$it", true) }
+                    prefs.apply()
+                    afterLoginPermissionsLauncher.launch(missing.toTypedArray())
+                }
+            }
+        }
+        dialog.show()
     }
 
     override fun onNewIntent(intent: Intent) {
