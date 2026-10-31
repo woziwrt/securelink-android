@@ -49,6 +49,7 @@ import org.linphone.ui.main.model.isEndToEndEncryptionMandatory
 import org.linphone.ui.main.settings.model.AccountDeviceModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class AccountProfileViewModel
@@ -288,7 +289,13 @@ class AccountProfileViewModel
                 val identity = account.params.identityAddress?.asStringUriOnly()
                 Log.w("$TAG Removing account [$identity] and all related data (auth info, conferences, conversations, call logs)")
                 val wasLastAccount = core.accountList.size <= 1 // the removal may complete later (unregister first)
+                val directory = SecureLinkAccounts.setting(account, "dir_url")
                 core.removeAccountWithData(account)
+                if (!wasLastAccount && directory.isNotEmpty()) {
+                    // SecureLink, two servers: signing out of one company takes its people along, the other stays
+                    core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
+                    coreContext.contactsManager.notifyContactsListChanged()
+                }
                 if (wasLastAccount) {
                     // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
                     // directory people may survive – a new QR must not list the previous account's contacts.
