@@ -161,7 +161,7 @@ abstract class AbstractConversationViewModel : GenericViewModel() {
     @UiThread
     fun startGroupCall() {
         coreContext.postOnCoreThread { core ->
-            val account = core.defaultAccount
+            val account = chatRoom.account ?: core.defaultAccount // SecureLink: the group's own server
             if (account == null) {
                 Log.e(
                     "$TAG No default account found, can't create group call!"

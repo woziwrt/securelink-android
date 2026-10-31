@@ -1077,6 +1077,7 @@
     <string name="securelink_sas_message_new_device">The other person has a new device. Read the security word to each other and confirm that it matches.</string>
     <string name="securelink_sas_it_matches">It matches</string>
     <string name="securelink_signed_out_title">This phone was signed out</string>
+    <string name="securelink_group_one_company_toast">A group can only have people from one company</string>
     <string name="securelink_signed_out_message">Your administrator sent you a new invitation or blocked this phone. To sign in again, open the link from the invitation or scan the new code.</string>
     <string name="securelink_signed_out_ok">I understand</string>
     <string name="securelink_permissions_title">Microphone and notifications</string>

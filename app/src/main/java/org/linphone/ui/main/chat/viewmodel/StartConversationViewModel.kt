@@ -97,7 +97,14 @@ class StartConversationViewModel
     @UiThread
     fun createGroupChatRoom() {
         coreContext.postOnCoreThread { core ->
-            val account = core.defaultAccount
+            // SecureLink, two servers: a group is for the people of one company only, through that company's account
+            val members = selection.value.orEmpty().map { it.address }
+            if (members.map { it.domain }.distinct().size > 1) {
+                Log.w("$TAG The selected people belong to different companies, no group")
+                showRedToast(R.string.securelink_group_one_company_toast, R.drawable.warning_circle)
+                return@postOnCoreThread
+            }
+            val account = SecureLinkAccounts.accountForGroup(core, members)
             if (account == null) {
                 Log.e(
                     "$TAG No default account found, can't create group conversation!"

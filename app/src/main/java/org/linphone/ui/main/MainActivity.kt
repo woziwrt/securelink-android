@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
-import org.linphone.BuildConfig
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.Account
@@ -1036,7 +1035,7 @@ class MainActivity : GenericActivity() {
         coreContext.postOnCoreThread { core ->
             // SecureLink: already signed in – a second server's link adds its account (one phone, two employers);
             // debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md)
-            if (BuildConfig.DEBUG && core.accountList.isNotEmpty()) {
+            if (SecureLinkAccounts.enabled && core.accountList.isNotEmpty()) {
                 SecureLinkAccounts.addFromProvisioning(url) { added ->
                     if (added) coreContext.provisioningAppliedEvent.postValue(Event(true))
                     val toast = if (added) {

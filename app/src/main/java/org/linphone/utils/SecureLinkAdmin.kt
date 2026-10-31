@@ -40,7 +40,9 @@ object SecureLinkAdmin {
     @WorkerThread
     /** A server value: the account's own (two servers, SecureLinkAccounts) or, with one server, the phone-wide [app] one. */
     fun setting(core: Core, key: String, account: Account? = core.defaultAccount): String {
-        return SecureLinkAccounts.setting(account, key).ifEmpty { core.config.getString("app", key, "").orEmpty() }
+        // never the other company's value: [app] is only for an account that does not keep its own
+        if (SecureLinkAccounts.hasOwnValues(account)) return SecureLinkAccounts.setting(account, key)
+        return core.config.getString("app", key, "").orEmpty()
     }
 
     /** The administrator's conversation keeps reports and requests as a record – nothing disappears there. */
@@ -352,8 +354,8 @@ object SecureLinkAdmin {
 
     /** When this account asked for its deletion (seconds since 1970), 0 = never – the button then says so (as iOS) */
     @WorkerThread
-    fun deletionRequestedAt(core: Core): Long {
-        val user = core.defaultAccount?.findAuthInfo()?.username.orEmpty()
+    fun deletionRequestedAt(core: Core, account: Account? = core.defaultAccount): Long {
+        val user = account?.findAuthInfo()?.username.orEmpty()
         if (user.isEmpty()) return 0L
         return core.config.getInt("securelink", "deletion_requested_$user", 0).toLong()
     }

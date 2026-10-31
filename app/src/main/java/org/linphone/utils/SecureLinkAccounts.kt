@@ -16,6 +16,7 @@ import java.util.UUID
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
+import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.core.Account
@@ -25,6 +26,7 @@ import org.linphone.core.Config
 import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.FriendList
+import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 
 /**
@@ -40,6 +42,10 @@ object SecureLinkAccounts {
     private val KEYS = listOf(
         "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url"
     )
+
+    /** Debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md). */
+    val enabled: Boolean
+        get() = BuildConfig.DEBUG
 
     /** Downloads the profile behind a sign-in link and adds (or, for the same server, replaces) its account. */
     fun addFromProvisioning(url: String, done: (Boolean) -> Unit) {
@@ -63,6 +69,10 @@ object SecureLinkAccounts {
         return account?.params?.getCustomParam(PARAM_PREFIX + key).orEmpty()
     }
 
+    /** The account keeps its server values itself (two servers): an empty one then means "this server has none". */
+    @WorkerThread
+    fun hasOwnValues(account: Account?): Boolean = setting(account, "domain").isNotEmpty()
+
     @WorkerThread
     private fun addAccount(core: Core, xml: String): Boolean {
         val profile = Factory.instance().createConfigFromString("")
@@ -81,17 +91,28 @@ object SecureLinkAccounts {
         }
         val domain = identity.domain.orEmpty()
 
-        // the same server again (a new invitation): the old login of that server goes, the other server's stays
-        core.accountList.filter { it.params.identityAddress?.domain == domain }.forEach { old ->
-            Log.w("$TAG Replacing the account [${old.params.identityAddress?.asStringUriOnly()}]")
-            core.removeAccount(old)
+        // the same server again (a new invitation): the same person gets the new password in place (removed and added
+        // again, the old account's unregister cleared the binding the new one had just made – the phone stayed offline);
+        // another account of that server goes, the other server's accounts stay
+        val same = core.accountList.find {
+            it.params.identityAddress?.domain == domain && it.params.identityAddress?.username == username
         }
-        core.authInfoList.filter { it.domain == domain }.forEach { core.removeAuthInfo(it) }
+        var replacedDefault = false
+        core.accountList.filter { it.params.identityAddress?.domain == domain && it != same }.forEach { old ->
+            Log.w("$TAG Replacing the account [${old.params.identityAddress?.asStringUriOnly()}]")
+            if (old == core.defaultAccount) replacedDefault = true
+            // unregister first (removed at once, the server kept the old binding for a year and its push kept ringing
+            // this phone), then its credentials and its data go too
+            val notRegistered = old.state != RegistrationState.Ok && old.state != RegistrationState.Progress
+            val auth = old.findAuthInfo()
+            core.removeAccountWithData(old)
+            if (notRegistered && auth != null) core.removeAuthInfo(auth) // no unregister will come to remove it
+        }
 
         // the first account came by remote provisioning: its server values are in the phone-wide sections
         core.accountList.forEach { adoptPhoneWideValues(core, it) }
 
-        val params = core.createAccountParams()
+        val params = same?.params?.clone() ?: core.createAccountParams()
         params.identityAddress = identity
         params.serverAddress = server
         profile.getString("proxy_0", "reg_route", null)?.let { route ->
@@ -105,19 +126,34 @@ object SecureLinkAccounts {
         params.limeServerUrl = profile.getString("proxy_0", "lime_server_url", null)
         params.limeAlgo = profile.getString("proxy_0", "lime_algo", null)
         params.instantMessagingEncryptionMandatory = true
-        // push as the first account has it (the app sets it up at the first sign-in)
-        val first = core.defaultAccount?.params
-        params.pushNotificationAllowed = first?.pushNotificationAllowed ?: core.isPushNotificationAvailable
-        params.remotePushNotificationAllowed = first?.remotePushNotificationAllowed ?: false
-        copyServerValues(profile, params)
+        if (same == null) {
+            // push as the first account has it (the app sets it up at the first sign-in)
+            val first = core.defaultAccount?.params
+            params.pushNotificationAllowed = first?.pushNotificationAllowed ?: core.isPushNotificationAvailable
+            params.remotePushNotificationAllowed = first?.remotePushNotificationAllowed ?: false
+        }
+        copyServerValues(profile, params, domain)
 
+        same?.findAuthInfo()?.let { core.removeAuthInfo(it) } // the old password goes
         val realm = profile.getString("auth_info_0", "realm", domain)
         core.addAuthInfo(
             factory.createAuthInfo(username, null, password, null, realm, domain, profile.getString("auth_info_0", "algorithm", "SHA-256"))
         )
-        val account = core.createAccount(params)
-        core.addAccount(account)
-        Log.i("$TAG Added the account [${identity.asStringUriOnly()}] of [${setting(account, "org_name")}]")
+        val account = if (same != null) {
+            same.params = params
+            core.refreshRegisters()
+            Log.i("$TAG Signed in again as [${identity.asStringUriOnly()}] of [${setting(same, "org_name")}]")
+            same
+        } else {
+            val added = core.createAccount(params)
+            core.addAccount(added)
+            Log.i("$TAG Added the account [${identity.asStringUriOnly()}] of [${setting(added, "org_name")}]")
+            added
+        }
+        if (replacedDefault || core.defaultAccount == null) {
+            // after CoreContext.onAccountRemoved, which picks another default a moment later
+            coreContext.postOnCoreThread { it.defaultAccount = account }
+        }
 
         refreshDirectories(core)
         return true
@@ -127,6 +163,16 @@ object SecureLinkAccounts {
     @WorkerThread
     fun accountFor(core: Core, remote: Address?): Account? {
         return core.accountList.find { it.params.identityAddress?.domain == remote?.domain } ?: core.defaultAccount
+    }
+
+    /**
+     * The account a group with [members] goes through, null when they belong to different companies: a group lives on
+     * one server's conference service, and each server lets in only its own people.
+     */
+    @WorkerThread
+    fun accountForGroup(core: Core, members: List<Address>): Account? {
+        if (members.map { it.domain }.distinct().size > 1) return null
+        return accountFor(core, members.firstOrNull())
     }
 
     /** The upload server is one for the whole core: before sending, point it at the server of [room]'s account. */
@@ -247,10 +293,21 @@ object SecureLinkAccounts {
     }
 
     @WorkerThread
-    private fun copyServerValues(profile: Config, params: org.linphone.core.AccountParams) {
-        if (profile.hasSection(SECTION) == 0) return
-        for (key in KEYS) {
-            params.addCustomParam(PARAM_PREFIX + key, profile.getString(SECTION, key, "").orEmpty())
+    private fun copyServerValues(profile: Config, params: org.linphone.core.AccountParams, domain: String) {
+        if (profile.hasSection(SECTION) != 0) {
+            for (key in KEYS) {
+                params.addCustomParam(PARAM_PREFIX + key, profile.getString(SECTION, key, "").orEmpty())
+            }
+            return
+        }
+        // a server from before securelink_account (31. 10. 2026): its values are in the profile's own [app] / [misc] –
+        // never leave them empty, the first company's phone-wide values would stand in for them
+        params.addCustomParam(PARAM_PREFIX + "domain", domain)
+        params.addCustomParam(PARAM_PREFIX + "org_name", domain)
+        params.addCustomParam(PARAM_PREFIX + "dir_url", profile.getString("misc", "contacts-vcard-list", "").orEmpty())
+        params.addCustomParam(PARAM_PREFIX + "upload_url", profile.getString("misc", "file_transfer_server_url", "").orEmpty())
+        for (key in listOf("admin_uri", "support_email", "privacy_url", "terms_url", "request_url")) {
+            params.addCustomParam(PARAM_PREFIX + key, profile.getString("app", key, "").orEmpty())
         }
     }
 

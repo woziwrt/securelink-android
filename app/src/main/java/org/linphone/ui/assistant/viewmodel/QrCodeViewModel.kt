@@ -34,6 +34,7 @@ import org.linphone.utils.Event
 import org.linphone.R
 import org.linphone.core.GlobalState
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class QrCodeViewModel
@@ -101,6 +102,23 @@ class QrCodeViewModel
                 if (url == null) {
                     Log.e("$TAG The content of the QR Code [$result] doesn't seem to be a valid web URL")
                     showRedToast(R.string.assistant_qr_code_invalid_toast, R.drawable.warning_circle)
+                    return
+                }
+
+                // SecureLink: already signed in – the QR code of a second server adds its account like the sign-in link,
+                // remote provisioning would overwrite the first account (proxy_0)
+                if (SecureLinkAccounts.enabled && core.accountList.isNotEmpty()) {
+                    Log.i("$TAG Already signed in, adding the QR code's account next to the others")
+                    core.isQrcodeVideoPreviewEnabled = false
+                    SecureLinkAccounts.addFromProvisioning(url) { added ->
+                        if (added) {
+                            coreContext.provisioningAppliedEvent.postValue(Event(true))
+                            showGreenToast(R.string.remote_provisioning_config_applied_toast, R.drawable.smiley)
+                            remoteProvisioningSuccessfulEvent.postValue(Event(true))
+                        } else {
+                            showRedToast(R.string.remote_provisioning_config_failed_toast, R.drawable.warning_circle)
+                        }
+                    }
                     return
                 }
 

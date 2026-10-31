@@ -330,7 +330,7 @@ class AccountProfileViewModel
 
     @WorkerThread
     private fun refreshDeletionRequested(core: Core) {
-        val at = SecureLinkAdmin.deletionRequestedAt(core)
+        val at = SecureLinkAdmin.deletionRequestedAt(core, account)
         deletionRequestedOn.postValue(
             if (at > 0L) DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(at * 1000)) else ""
         )
