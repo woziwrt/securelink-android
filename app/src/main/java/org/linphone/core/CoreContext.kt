@@ -59,6 +59,7 @@ import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class CoreContext
@@ -1207,9 +1208,10 @@ class CoreContext
                 )
             }
         } else {
-            val defaultAccount = core.defaultAccount
+            // SecureLink: with two servers the callee's domain picks the account – each server knows only its own people
+            val defaultAccount = SecureLinkAccounts.accountFor(core, address)
             params.account = defaultAccount
-            Log.i("$TAG No local address given, using default account [${defaultAccount?.params?.identityAddress?.asStringUriOnly()}]")
+            Log.i("$TAG No local address given, using account [${defaultAccount?.params?.identityAddress?.asStringUriOnly()}]")
         }
 
         val username = address.username.orEmpty()

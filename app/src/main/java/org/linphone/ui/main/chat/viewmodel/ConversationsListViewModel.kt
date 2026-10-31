@@ -46,6 +46,7 @@ import org.linphone.ui.main.viewmodel.AbstractMainViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 import java.text.Collator
 import java.util.Locale
@@ -419,7 +420,7 @@ class ConversationsListViewModel
     @WorkerThread
     fun createOneToOneChatRoomWith(remote: Address) {
         val core = coreContext.core
-        val account = core.defaultAccount
+        val account = SecureLinkAccounts.accountFor(core, remote)
         if (account == null) {
             Log.e(
                 "$TAG No default account found, can't create conversation with [${remote.asStringUriOnly()}]!"

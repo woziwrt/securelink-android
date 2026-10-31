@@ -52,6 +52,7 @@ import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class ContactViewModel
@@ -539,7 +540,7 @@ class ContactViewModel
     private fun goToConversation(remote: Address) {
         val core = coreContext.core
         if (SecureLinkAdmin.refuseIfBlocked(core, remote)) return // SecureLink: unblock first
-        val account = core.defaultAccount
+        val account = SecureLinkAccounts.accountFor(core, remote)
         val localSipUri = account?.params?.identityAddress?.asStringUriOnly()
         if (!localSipUri.isNullOrEmpty()) {
             val remoteSipUri = remote.asStringUriOnly()

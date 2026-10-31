@@ -35,6 +35,7 @@ import org.linphone.ui.main.viewmodel.AddressSelectionViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class StartConversationViewModel
@@ -163,7 +164,7 @@ class StartConversationViewModel
     fun createOneToOneChatRoomWith(remote: Address) {
         val core = coreContext.core
         if (SecureLinkAdmin.refuseIfBlocked(core, remote)) return // SecureLink: unblock first
-        val account = core.defaultAccount
+        val account = SecureLinkAccounts.accountFor(core, remote)
         if (account == null) {
             Log.e(
                 "$TAG No default account found, can't create conversation with [${remote.asStringUriOnly()}]!"

@@ -19,6 +19,7 @@ import javax.net.ssl.TrustManagerFactory
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.core.Account
+import org.linphone.core.Address
 import org.linphone.core.Config
 import org.linphone.core.Core
 import org.linphone.core.Factory
@@ -119,6 +120,12 @@ object SecureLinkAccounts {
 
         refreshDirectories(core)
         return true
+    }
+
+    /** The account of the server [remote] belongs to (each server knows only its own people), else the default one. */
+    @WorkerThread
+    fun accountFor(core: Core, remote: Address?): Account? {
+        return core.accountList.find { it.params.identityAddress?.domain == remote?.domain } ?: core.defaultAccount
     }
 
     /** More than one server: directories are downloaded by the app (liblinphone cannot pick the right password). */
