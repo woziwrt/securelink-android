@@ -1338,6 +1338,9 @@ class CoreContext
 
     @WorkerThread
     fun startKeepAliveService() {
+        // SecureLink: push only – the keep-alive service was removed from the manifest (no specialUse foreground service)
+        Log.i("$TAG SecureLink: keep-alive service is not used, every account has push")
+        return
         if (keepAliveServiceStarted) {
             Log.w("$TAG Keep alive service already started, skipping")
         }

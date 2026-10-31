@@ -28,17 +28,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- Needed for Android 14
     https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <!-- SecureLink: no FOREGROUND_SERVICE_CAMERA – video is off in the core, a call never sends video (the SDK adds it) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <!-- Required for foreground service started when a push is being received,
     without it app won't be able to access network if data saver is ON (for example) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    <!-- Needed to keep a permanent foreground service and keep app alive to be able to receive
-    messages & calls for third party accounts for which push notifications aren't available,
-    and starting Android 15 dataSync is limited to 6 hours per day
-    and can't be used with RECEIVE_BOOT_COMPLETED intent either -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- SecureLink: no FOREGROUND_SERVICE_SPECIAL_USE – every SecureLink account has push (FCM), so the permanent
+         keep-alive service for accounts without push is never needed (Google Play asks a video for every type) -->
 
     <!-- SecureLink: no ACCESS_LOCAL_NETWORK – our servers are always on the internet, and Android shows it as the scary
          "Nearby devices" request; calls between two phones on the same Wi-Fi go through the relay instead -->
@@ -174,7 +172,7 @@
         <service
             android:name=".core.CoreInCallService"
             android:exported="false"
-            android:foregroundServiceType="phoneCall|camera|microphone"
+            android:foregroundServiceType="phoneCall|microphone"
             android:stopWithTask="false"
             android:label="@string/app_name" />
 
@@ -198,17 +196,6 @@
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </service>
-
-        <service
-            android:name=".core.CoreKeepAliveThirdPartyAccountsService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"
-            android:stopWithTask="false"
-            android:label="@string/app_name">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Needed to keep app alive to be able to receive messages and calls from third party SIP servers for which push notifications aren't available." />
         </service>
 
         <!--<service

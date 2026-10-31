@@ -105,7 +105,7 @@ class CorePreferences
 
     @get:AnyThread @set:WorkerThread
     var keepServiceAlive: Boolean
-        get() = config.getBool("app", "keep_service_alive", false)
+        get() = false // SecureLink: push only, the keep-alive service is not even in the manifest
         set(value) {
             config.setBool("app", "keep_service_alive", value)
         }
