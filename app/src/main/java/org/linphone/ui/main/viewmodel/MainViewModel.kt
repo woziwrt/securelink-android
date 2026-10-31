@@ -552,25 +552,10 @@ class MainViewModel
 
     @WorkerThread
     private fun computeNonDefaultAccountNotificationsCount() {
-        var count = 0
-        for (account in coreContext.core.accountList) {
-            if (account == coreContext.core.defaultAccount) continue
-            count += account.unreadChatMessageCount + account.missedCallsCount
-        }
-        if (count != nonDefaultAccountNotificationsCount) {
-            if (count > 0) {
-                val label = AppUtils.getStringWithPlural(
-                    R.plurals.pending_notification_for_other_accounts,
-                    count,
-                    count.toString()
-                )
-                addAlert(NON_DEFAULT_ACCOUNT_NOTIFICATIONS, label, forceUpdate = true)
-                Log.i("$TAG Found [$count] pending notifications for other account(s)")
-            } else {
-                removeAlert(NON_DEFAULT_ACCOUNT_NOTIFICATIONS)
-                Log.i("$TAG No pending notification found for other account(s)")
-            }
-            nonDefaultAccountNotificationsCount = count
+        // SecureLink: two servers (two employers) share one history and one conversation list – nothing is "elsewhere"
+        if (nonDefaultAccountNotificationsCount != 0) {
+            removeAlert(NON_DEFAULT_ACCOUNT_NOTIFICATIONS)
+            nonDefaultAccountNotificationsCount = 0
         }
     }
 

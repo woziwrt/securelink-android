@@ -162,6 +162,7 @@ class ConversationViewModel
         @WorkerThread
         override fun onConferenceJoined(chatRoom: ChatRoom, eventLog: EventLog) {
             Log.i("$TAG Conversation was joined")
+            updatePeerHasNoDevice() // SecureLink: the full state may only update (not add) the other's device
             if (LinphoneUtils.isChatRoomAGroup(chatRoom)) {
                 addEvents(arrayOf(eventLog))
             }
@@ -206,6 +207,7 @@ class ConversationViewModel
         override fun onChatMessagesReceived(chatRoom: ChatRoom, eventLogs: Array<EventLog>) {
             Log.i("$TAG Received [${eventLogs.size}] new message(s)")
             computeComposingLabel()
+            updatePeerHasNoDevice() // SecureLink: an answer means a signed-in phone
 
             unreadMessagesCount.postValue(chatRoom.unreadMessagesCount)
             // SecureLink: CoreContext drops a blocked contact's messages, but this listener may run first (as iOS)
