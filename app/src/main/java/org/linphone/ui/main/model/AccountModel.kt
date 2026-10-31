@@ -40,6 +40,7 @@ import org.linphone.core.SecurityLevel
 import org.linphone.core.tools.Log
 import org.linphone.utils.AppUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 
 class AccountModel
     @WorkerThread
@@ -274,7 +275,13 @@ class AccountModel
         trust.postValue(SecurityLevel.EndToEndEncryptedAndVerified)
         showTrust.postValue(isEndToEndEncryptionMandatory())
 
-        val name = LinphoneUtils.getDisplayName(account.params.identityAddress)
+        // SecureLink: with two servers the menu tells the companies apart, not the account numbers
+        val company = SecureLinkAccounts.setting(account, "org_name")
+        val name = if (SecureLinkAccounts.isMultiServer(account.core) && company.isNotEmpty()) {
+            company
+        } else {
+            LinphoneUtils.getDisplayName(account.params.identityAddress)
+        }
         displayName.postValue(name)
 
         initials.postValue(AppUtils.getInitials(name))
