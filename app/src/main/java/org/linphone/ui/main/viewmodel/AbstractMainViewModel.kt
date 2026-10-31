@@ -290,14 +290,8 @@ open class AbstractMainViewModel
 
     @WorkerThread
     fun updateMissedCallsCount() {
-        val account = LinphoneUtils.getDefaultAccount()
-        // Fetch all call logs if only one account to workaround no history issue
-        // TODO FIXME: remove workaround later
-        val count = if (coreContext.core.accountList.size > 1) {
-            account?.missedCallsCount ?: coreContext.core.missedCallsCount
-        } else {
-            coreContext.core.missedCallsCount
-        }
+        // SecureLink, two servers: history shows the calls of all accounts, so does the badge
+        val count = coreContext.core.missedCallsCount
         val moreThanOne = count > 1
         Log.i(
             "$TAG There ${if (moreThanOne) "are" else "is"} [$count] missed ${if (moreThanOne) "calls" else "call"}"
@@ -307,8 +301,8 @@ open class AbstractMainViewModel
 
     @WorkerThread
     fun computeUnreadMessagesCount() {
-        val account = LinphoneUtils.getDefaultAccount()
-        val count = account?.unreadChatMessageCount ?: coreContext.core.unreadChatMessageCount
+        // SecureLink, two servers: the conversations of all accounts are listed, so the badge counts them all
+        val count = coreContext.core.unreadChatMessageCount
         val moreThanOne = count > 1
         Log.i(
             "$TAG There ${if (moreThanOne) "are" else "is"} [$count] unread ${if (moreThanOne) "messages" else "message"}"
@@ -319,14 +313,7 @@ open class AbstractMainViewModel
     @UiThread
     fun resetMissedCallsCount() {
         coreContext.postOnCoreThread { core ->
-            val account = LinphoneUtils.getDefaultAccount()
-            // Fetch all call logs if only one account to workaround no history issue
-            // TODO FIXME: remove workaround later
-            if (coreContext.core.accountList.size > 1) {
-                account?.resetMissedCallsCount() ?: core.resetMissedCallsCount()
-            } else {
-                core.resetMissedCallsCount()
-            }
+            core.resetMissedCallsCount() // SecureLink: all accounts, as the badge
             updateMissedCallsCount()
         }
     }
