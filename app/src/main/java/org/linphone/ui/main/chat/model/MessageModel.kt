@@ -64,6 +64,7 @@ import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
 import org.linphone.utils.PatternClickableSpan
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SpannableClickedListener
 import org.linphone.utils.TimestampUtils
 
@@ -367,8 +368,9 @@ class MessageModel
 
     @UiThread
     fun resend() {
-        coreContext.postOnCoreThread {
+        coreContext.postOnCoreThread { core ->
             Log.i("$TAG Re-sending message with ID [$id]")
+            SecureLinkAccounts.useUploadServerOf(core, chatMessage.chatRoom) // two servers: attachments go to this one
             chatMessage.send()
         }
     }
