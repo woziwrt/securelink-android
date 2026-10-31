@@ -190,6 +190,14 @@ object SecureLinkAccounts {
         list.type = FriendList.Type.VCard4
         core.addFriendList(list)
         val count = if (vcards.isBlank()) 0 else list.importFriendsFromVcard4Buffer(vcards)
+        // two employers: the company goes with the name, so a contact, a call, a message and a notification all say it
+        if (isMultiServer(core)) {
+            for (friend in list.friends) {
+                friend.edit()
+                friend.name = "${friend.name} · $name"
+                friend.done()
+            }
+        }
         Log.i("$TAG Directory of [$name]: $count people")
         core.friendsLists.forEach { Log.i("$TAG   list [${it.displayName}] ${it.type} [${it.uri}]: ${it.friends.size}") }
         coreContext.contactsManager.onDirectoryRefreshed(list)

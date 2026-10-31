@@ -140,7 +140,8 @@ class AppUtils {
             // SecureLink: accounts are numbers – a lone digit in the circle means nothing, show a person (as iOS)
             if (displayName.trim().all { it.isDigit() }) return ""
 
-            val split = displayName.uppercase(Locale.getDefault()).split(" ")
+            // SecureLink: "Jan Novák · Copservis" (two servers) – the circle is the person's, not the company's
+            val split = displayName.substringBefore(" · ").uppercase(Locale.getDefault()).split(" ")
             var initials = ""
             var characters = 0
 
