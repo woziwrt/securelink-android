@@ -264,7 +264,7 @@ object SecureLinkAdmin {
     // --- account deletion (App Review 5.1.1(v), as iOS): one tap sends a signed request to the server ([app] request_url,
     // HTTP digest SHA-256 with the SIP account – the same check as attachments); the administrator deletes within 7 days
 
-    private fun sha256(text: String): String {
+    fun sha256(text: String): String {
         return MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
     }
 

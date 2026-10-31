@@ -64,6 +64,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
+import org.linphone.BuildConfig
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.Account
@@ -88,6 +89,7 @@ import org.linphone.utils.LinphoneUtils
 import androidx.core.content.edit
 import org.linphone.ui.sso.SingleSignOnActivity
 import org.linphone.ui.SecureLinkTerms
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 @UiThread
@@ -1032,6 +1034,20 @@ class MainActivity : GenericActivity() {
         }
 
         coreContext.postOnCoreThread { core ->
+            // SecureLink: already signed in – a second server's link adds its account (one phone, two employers);
+            // debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md)
+            if (BuildConfig.DEBUG && core.accountList.isNotEmpty()) {
+                SecureLinkAccounts.addFromProvisioning(url) { added ->
+                    if (added) coreContext.provisioningAppliedEvent.postValue(Event(true))
+                    val toast = if (added) {
+                        Pair(R.string.remote_provisioning_config_applied_toast, R.drawable.smiley)
+                    } else {
+                        Pair(R.string.remote_provisioning_config_failed_toast, R.drawable.warning_circle)
+                    }
+                    (if (added) coreContext.showGreenToastEvent else coreContext.showRedToastEvent).postValue(Event(toast))
+                }
+                return@postOnCoreThread
+            }
             core.provisioningUri = url
             Log.w("$TAG Remote provisioning URL set to [$url], restarting Core now")
             core.stop()

@@ -62,6 +62,7 @@ import org.linphone.utils.AppUtils
 import org.linphone.utils.ImageUtils
 import org.linphone.utils.LinphoneUtils
 import org.linphone.utils.PhoneNumberUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.ShortcutUtils
 import java.io.FileNotFoundException
 
@@ -258,15 +259,7 @@ class ContactsManager
         ) {
             Log.i("$TAG Friend list [${friendList.displayName}] sync status changed to [$status]")
             when (status) {
-                FriendList.SyncStatus.Successful -> {
-                    // SecureLink: the server directory replaces its friends wholesale; a number cached as unknown during a
-                    // call (member who joined after the last refresh) would stay a number in the history until a restart
-                    knownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
-                    knownContactsAvatarsMap.clear()
-                    unknownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
-                    unknownContactsAvatarsMap.clear()
-                    notifyContactsListChanged()
-                }
+                FriendList.SyncStatus.Successful -> onDirectoryRefreshed(friendList)
                 FriendList.SyncStatus.Failure -> {
                     Log.e("$TAG Friend list [${friendList.displayName}] sync failed: $message")
                 }
@@ -638,6 +631,10 @@ class ContactsManager
         val now = System.currentTimeMillis()
         if (now - lastDirectoryRefresh < 20_000L) return
         lastDirectoryRefresh = now
+        if (SecureLinkAccounts.isMultiServer(core)) { // two servers: each directory with its own account's password
+            SecureLinkAccounts.refreshDirectories(core)
+            return
+        }
         for (list in core.friendsLists) {
             if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
                 Log.i("$TAG SecureLink: refreshing the server directory [${list.displayName}]")
@@ -646,6 +643,18 @@ class ContactsManager
                 list.synchronizeFriendsFromServer()
             }
         }
+    }
+
+    // SecureLink: the server directory replaces its friends wholesale; a number cached as unknown during a call (member
+    // who joined after the last refresh) would stay a number in the history until a restart
+    @WorkerThread
+    fun onDirectoryRefreshed(friendList: FriendList) {
+        Log.i("$TAG Directory [${friendList.displayName}] refreshed")
+        knownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
+        knownContactsAvatarsMap.clear()
+        unknownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
+        unknownContactsAvatarsMap.clear()
+        notifyContactsListChanged()
     }
 
     @WorkerThread
