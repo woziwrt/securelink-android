@@ -17,6 +17,7 @@ import java.util.Date
 import java.util.UUID
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
+import org.linphone.core.Account
 import org.linphone.core.Address
 import org.linphone.core.ChatMessage
 import org.linphone.core.ChatRoom
@@ -37,14 +38,15 @@ object SecureLinkAdmin {
     const val DISAPPEAR_AFTER_SECONDS = 7L * 24 * 3600
 
     @WorkerThread
-    fun setting(core: Core, key: String): String {
-        return core.config.getString("app", key, "").orEmpty()
+    /** A server value: the account's own (two servers, SecureLinkAccounts) or, with one server, the phone-wide [app] one. */
+    fun setting(core: Core, key: String, account: Account? = core.defaultAccount): String {
+        return SecureLinkAccounts.setting(account, key).ifEmpty { core.config.getString("app", key, "").orEmpty() }
     }
 
     /** The administrator's conversation keeps reports and requests as a record – nothing disappears there. */
     @WorkerThread
     fun isAdminRoom(core: Core, room: ChatRoom): Boolean {
-        val uri = setting(core, "admin_uri")
+        val uri = setting(core, "admin_uri", room.account ?: core.defaultAccount)
         if (uri.isEmpty()) return false
         val admin = Factory.instance().createAddress(uri) ?: return false
         return room.participants.any { it.address.weakEqual(admin) }
@@ -129,11 +131,11 @@ object SecureLinkAdmin {
         draft: String,
         onReady: (String) -> Unit,
         onError: () -> Unit,
-        sendNow: Boolean = false
+        sendNow: Boolean = false,
+        account: Account? = core.defaultAccount // two servers: the administrator of the server it is about
     ) {
-        val uri = setting(core, "admin_uri")
+        val uri = setting(core, "admin_uri", account)
         val admin = if (uri.isEmpty()) null else Factory.instance().createAddress(uri)
-        val account = core.defaultAccount
         if (admin == null || account == null) {
             Log.e("$TAG No administrator address in the profile – cannot open the conversation")
             onError()
@@ -253,11 +255,12 @@ object SecureLinkAdmin {
         }
         Log.i("$TAG $key ${if (blocked) "blocked" else "unblocked"} on this phone")
         // the report goes to the administrator – unless the administrator is the one blocked, or the one blocking
-        val adminKey = blockKey(Factory.instance().createAddress(setting(core, "admin_uri")))
-        val ownKey = blockKey(core.defaultAccount?.params?.identityAddress)
+        val account = SecureLinkAccounts.accountFor(core, address)
+        val adminKey = blockKey(Factory.instance().createAddress(setting(core, "admin_uri", account)))
+        val ownKey = blockKey(account?.params?.identityAddress)
         if (blocked && key != adminKey && ownKey != adminKey) {
             val draft = coreContext.context.getString(R.string.securelink_block_report_draft, name, key.removePrefix("sip:"))
-            openAdminConversation(core, draft, { }, { Log.e("$TAG Block report could not be sent") }, sendNow = true)
+            openAdminConversation(core, draft, { }, { Log.e("$TAG Block report could not be sent") }, sendNow = true, account)
         }
     }
 
@@ -289,9 +292,9 @@ object SecureLinkAdmin {
     }
 
     @WorkerThread
-    fun requestDeletion(core: Core, done: (Boolean) -> Unit) {
-        val link = setting(core, "request_url")
-        val auth = core.defaultAccount?.findAuthInfo()
+    fun requestDeletion(core: Core, account: Account? = core.defaultAccount, done: (Boolean) -> Unit) {
+        val link = setting(core, "request_url", account)
+        val auth = account?.findAuthInfo()
         val user = auth?.username.orEmpty()
         if (link.isEmpty() || auth == null || user.isEmpty()) {
             Log.e("$TAG Deletion request: no request_url or no credentials")

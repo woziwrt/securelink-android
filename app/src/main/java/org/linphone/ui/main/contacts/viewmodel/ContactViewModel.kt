@@ -454,9 +454,10 @@ class ContactViewModel
         coreContext.postOnCoreThread { core ->
             val address = friend.address ?: return@postOnCoreThread
             val draft = SecureLinkAdmin.reportContactDraft(friend.name.orEmpty(), address)
-            SecureLinkAdmin.openAdminConversation(core, draft, { conversationId ->
+            val account = SecureLinkAccounts.accountFor(core, address) // the administrator of the contact's server
+            SecureLinkAdmin.openAdminConversation(core, draft, account = account, onReady = { conversationId ->
                 goToConversationEvent.postValue(Event(conversationId))
-            }, {
+            }, onError = {
                 coreContext.showRedToastEvent.postValue(
                     Event(Pair(R.string.conversation_failed_to_create_toast, R.drawable.warning_circle))
                 )

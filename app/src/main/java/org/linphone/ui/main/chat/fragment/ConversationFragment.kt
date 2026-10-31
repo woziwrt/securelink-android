@@ -970,13 +970,14 @@ open class ConversationFragment : SlidingPaneChildFragment() {
                 messageLongPressViewModel.dismiss()
                 coreContext.postOnCoreThread { core ->
                     val draft = SecureLinkAdmin.reportMessageDraft(core, model.chatMessage)
-                    SecureLinkAdmin.openAdminConversation(core, draft, { conversationId ->
+                    val account = model.chatMessage.chatRoom.account ?: core.defaultAccount // its server's administrator
+                    SecureLinkAdmin.openAdminConversation(core, draft, account = account, onReady = { conversationId ->
                         coreContext.postOnMainThread {
                             Log.i("$TAG Opening the administrator conversation with a report draft")
                             sharedViewModel.showConversationEvent.value = Event(conversationId)
                             sharedViewModel.navigateToConversationsEvent.value = Event(true)
                         }
-                    }, {
+                    }, onError = {
                         coreContext.postOnMainThread {
                             (requireActivity() as GenericActivity).showRedToast(
                                 getString(R.string.conversation_failed_to_create_toast),

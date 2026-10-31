@@ -59,6 +59,7 @@ import org.linphone.utils.AudioUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.LinphoneUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkPrivacy
 
 class SendMessageInConversationViewModel
@@ -314,6 +315,7 @@ class SendMessageInConversationViewModel
     @UiThread
     fun sendMessage() {
         coreContext.postOnCoreThread {
+            SecureLinkAccounts.useUploadServerOf(coreContext.core, chatRoom) // two servers: attachments go to this one
             val isBasicChatRoom: Boolean = chatRoom.hasCapability(ChatRoom.Capabilities.Basic.toInt())
 
             val messageToReplyTo = chatMessageToReplyTo

@@ -20,6 +20,7 @@ import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.core.Account
 import org.linphone.core.Address
+import org.linphone.core.ChatRoom
 import org.linphone.core.Config
 import org.linphone.core.Core
 import org.linphone.core.Factory
@@ -126,6 +127,16 @@ object SecureLinkAccounts {
     @WorkerThread
     fun accountFor(core: Core, remote: Address?): Account? {
         return core.accountList.find { it.params.identityAddress?.domain == remote?.domain } ?: core.defaultAccount
+    }
+
+    /** The upload server is one for the whole core: before sending, point it at the server of [room]'s account. */
+    @WorkerThread
+    fun useUploadServerOf(core: Core, room: ChatRoom) {
+        val url = setting(room.account, "upload_url")
+        if (url.isNotEmpty() && core.fileTransferServer != url) {
+            Log.i("$TAG Attachments now go to [$url]")
+            core.fileTransferServer = url
+        }
     }
 
     /** More than one server: directories are downloaded by the app (liblinphone cannot pick the right password). */

@@ -363,7 +363,7 @@ class AccountProfileViewModel
     @UiThread
     fun requestDeletion() {
         coreContext.postOnCoreThread { core ->
-            SecureLinkAdmin.requestDeletion(core) { sent ->
+            SecureLinkAdmin.requestDeletion(core, account) { sent ->
                 if (sent) {
                     refreshDeletionRequested(core)
                     // the request itself is on the server; the administrator also learns about it on the phone
@@ -372,7 +372,8 @@ class AccountProfileViewModel
                         AppUtils.getString(R.string.securelink_deletion_notice_to_admin),
                         { },
                         { Log.e("$TAG Deletion notice to the administrator could not be sent") },
-                        sendNow = true
+                        sendNow = true,
+                        account = account
                     )
                 }
                 deletionRequestedEvent.postValue(Event(sent))
