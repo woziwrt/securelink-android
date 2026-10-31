@@ -223,13 +223,11 @@ class ConversationsListViewModel
 
         val list = arrayListOf<ConversationModelWrapper>()
 
-        val account = LinphoneUtils.getDefaultAccount()
-        val chatRooms = if (filter.isEmpty()) {
-            account?.chatRooms
-        } else {
-            account?.filterChatRooms(filter)
-        }
-        for (chatRoom in chatRooms.orEmpty()) {
+        // SecureLink: two servers (two employers) are one phone – the conversations of both, newest first
+        val chatRooms = coreContext.core.accountList.flatMap { account ->
+            if (filter.isEmpty()) account.chatRooms.toList() else account.filterChatRooms(filter).toList()
+        }.sortedByDescending { it.lastUpdateTime }
+        for (chatRoom in chatRooms) {
             // SecureLink: a conversation with a contact blocked on this phone is not listed (as iOS)
             if (SecureLinkAdmin.isBlockedRoom(coreContext.core, chatRoom)) continue
             val model = ConversationModel(chatRoom)
@@ -249,12 +247,9 @@ class ConversationsListViewModel
     private fun addChatRoom(chatRoom: ChatRoom) {
         if (SecureLinkAdmin.isBlockedRoom(coreContext.core, chatRoom)) return
         val identifier = chatRoom.identifier
-        val chatRoomAccount = chatRoom.account
-        val defaultAccount = LinphoneUtils.getDefaultAccount()
-        if (defaultAccount == null || chatRoomAccount == null || chatRoomAccount != defaultAccount) {
-            Log.w(
-                "$TAG Chat room with identifier [$identifier] was created but not displaying it because it doesn't belong to currently default account"
-            )
+        val chatRoomAccount = chatRoom.account // SecureLink: any of our accounts, not only the default one
+        if (chatRoomAccount == null) {
+            Log.w("$TAG Chat room with identifier [$identifier] was created but has no account, not displaying it")
             return
         }
 
@@ -283,7 +278,7 @@ class ConversationsListViewModel
         }
 
         if (currentFilter.isNotEmpty()) {
-            val filteredRooms = defaultAccount.filterChatRooms(currentFilter)
+            val filteredRooms = chatRoomAccount.filterChatRooms(currentFilter)
             val found = filteredRooms.find {
                 it == chatRoom
             }

@@ -181,14 +181,8 @@ class HistoryListViewModel
         val list = arrayListOf<CallLogModelWrapper>()
         SecureLinkAdmin.pruneCallHistory(coreContext.core) // SecureLink: 7 days, as messages
 
-        val account = LinphoneUtils.getDefaultAccount()
-        // Fetch all call logs if only one account to workaround no history issue
-        // TODO FIXME: remove workaround later
-        val logs = if (coreContext.core.accountList.size > 1) {
-            account?.callLogs ?: coreContext.core.callLogs
-        } else {
-            coreContext.core.callLogs
-        }
+        // SecureLink: two servers (two employers) are one phone – the history of both, the name says the company
+        val logs = coreContext.core.callLogs
 
         for (callLog in logs) {
             val model = CallLogModel(callLog)
