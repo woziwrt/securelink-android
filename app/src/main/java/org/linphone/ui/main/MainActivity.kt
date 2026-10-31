@@ -38,6 +38,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.UiThread
+import androidx.annotation.WorkerThread
 import androidx.car.app.connection.CarConnection
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -68,6 +69,7 @@ import org.linphone.compatibility.Compatibility
 import org.linphone.core.Account
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
+import org.linphone.core.GlobalState
 import org.linphone.core.RegistrationState
 import org.linphone.core.tools.Log
 import org.linphone.databinding.MainActivityBinding
@@ -461,7 +463,11 @@ class MainActivity : GenericActivity() {
         coreContext.postOnCoreThread { core ->
             // SecureLink: no welcome pages, the first screen is the assistant with the QR scanner
             corePreferences.firstLaunch = false
-            if (core.accountList.isEmpty()) {
+            if (core.accountList.isEmpty() && isConfigLink(intent)) {
+                // SecureLink: a sign-in link started the app – handleIntent() applies it; the assistant on top would
+                // hide the result and the first tap on the link would look ignored (31 Oct 2026)
+                Log.i("$TAG No account yet, but the app was opened by a sign-in link, not showing Assistant")
+            } else if (core.accountList.isEmpty()) {
                 Log.w("$TAG No account found, showing Assistant activity")
                 coreContext.postOnMainThread {
                     try {
@@ -1012,6 +1018,11 @@ class MainActivity : GenericActivity() {
         }
     }
 
+    private fun isConfigLink(intent: Intent?): Boolean {
+        return intent?.action == Intent.ACTION_VIEW &&
+            intent.data?.toString().orEmpty().startsWith("securelink-config:")
+    }
+
     private fun handleConfigIntent(uri: String) {
         Log.i("$TAG Trying to parse config intent [$uri] as remote provisioning URL")
         val url = LinphoneUtils.getRemoteProvisioningUrlFromUri(uri)
@@ -1025,6 +1036,24 @@ class MainActivity : GenericActivity() {
             Log.w("$TAG Remote provisioning URL set to [$url], restarting Core now")
             core.stop()
             SecureLinkAdmin.wipeZrtpCacheIfScheduled(core.config) // SecureLink: new account, no inherited trust
+            // SecureLink: the link brought no account (expired or already used) – show the assistant as on a plain start
+            core.addListener(object : CoreListenerStub() {
+                @WorkerThread
+                override fun onGlobalStateChanged(core: Core, state: GlobalState?, message: String) {
+                    if (state != GlobalState.On) return
+                    core.removeListener(this)
+                    if (core.accountList.isEmpty()) {
+                        Log.w("$TAG Sign-in link brought no account, showing Assistant activity")
+                        coreContext.postOnMainThread {
+                            try {
+                                startActivity(Intent(this@MainActivity, AssistantActivity::class.java))
+                            } catch (ise: IllegalStateException) {
+                                Log.e("$TAG Can't start activity: $ise")
+                            }
+                        }
+                    }
+                }
+            })
             Log.i("$TAG Core has been stopped, let's restart it")
             core.start()
             Log.i("$TAG Core has been restarted")
