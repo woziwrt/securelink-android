@@ -234,7 +234,7 @@ class AccountProfileViewModel
                 // SecureLink: the name others see comes from the administrator's directory (read-only here)
                 val identity = account.params.identityAddress
                 displayName.postValue(
-                    identity?.let { coreContext.contactsManager.findContactByAddress(it)?.name }
+                    SecureLinkAccounts.ownName(core, account).ifEmpty { null }
                         ?: identity?.displayName ?: identity?.username
                 )
                 showDeviceId.postValue(false)

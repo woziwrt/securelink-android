@@ -40,7 +40,8 @@ object SecureLinkAccounts {
     private const val SECTION = "securelink_account"
     private const val PARAM_PREFIX = "sl_"
     private val KEYS = listOf(
-        "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url"
+        "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url",
+        "my_name"
     )
 
     /** Debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md). */
@@ -67,6 +68,19 @@ object SecureLinkAccounts {
     @WorkerThread
     fun setting(account: Account?, key: String): String {
         return account?.params?.getCustomParam(PARAM_PREFIX + key).orEmpty()
+    }
+
+    /**
+     * The person's own name: the directory leaves everyone out of their own list, so the server sends it in the profile
+     * (my_name, 1. 11. 2026); an account from remote provisioning finds it in the phone-wide section. "" when unknown.
+     */
+    @WorkerThread
+    fun ownName(core: Core, account: Account): String {
+        val identity = account.params.identityAddress ?: return ""
+        coreContext.contactsManager.findContactByAddress(identity)?.name?.let { if (it.isNotEmpty()) return it }
+        setting(account, "my_name").let { if (it.isNotEmpty()) return it }
+        if (core.config.getString(SECTION, "domain", "") != identity.domain) return ""
+        return core.config.getString(SECTION, "my_name", "").orEmpty()
     }
 
     /** The account keeps its server values itself (two servers): an empty one then means "this server has none". */

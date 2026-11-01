@@ -280,7 +280,10 @@ class AccountModel
         val name = if (SecureLinkAccounts.isMultiServer(account.core) && company.isNotEmpty()) {
             company
         } else {
-            LinphoneUtils.getDisplayName(account.params.identityAddress)
+            // SecureLink: the account is a number – the person's name from the server instead
+            SecureLinkAccounts.ownName(account.core, account).ifEmpty {
+                LinphoneUtils.getDisplayName(account.params.identityAddress)
+            }
         }
         displayName.postValue(name)
 
