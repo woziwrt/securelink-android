@@ -82,6 +82,11 @@ class HelpViewModel
 
     val canConfigFileBeViewed = MutableLiveData<Boolean>()
 
+    // SecureLink: connection check result (lines with ✓ / ✗), shown in a dialog the user can copy to the administrator
+    val connectionCheckEvent: MutableLiveData<Event<String>> by lazy {
+        MutableLiveData<Event<String>>()
+    }
+
     val newVersionAvailableEvent: MutableLiveData<Event<Pair<String, String>>> by lazy {
         MutableLiveData()
     }
@@ -291,6 +296,74 @@ class HelpViewModel
                 } else {
                     Log.e("$TAG Failed to save .linphonerc string as file in cache folder")
                 }
+            }
+        }
+    }
+
+    /**
+     * SecureLink: what works and what does not, one line each – sign-in of every circle, whether its server answers,
+     * wake-up push, notifications, full-screen calls, microphone, network, version (as the iOS "My account" check).
+     */
+    @UiThread
+    fun runConnectionCheck() {
+        val ctx = coreContext.context
+        coreContext.postOnCoreThread { core ->
+            val several = core.accountList.size > 1
+            val lines = arrayListOf<String>()
+            val servers = linkedSetOf<Pair<String, Int>>()
+            var push = false
+            for (account in core.accountList) {
+                val state = when (account.state) {
+                    org.linphone.core.RegistrationState.Ok -> ctx.getString(R.string.securelink_check_reg_ok)
+                    org.linphone.core.RegistrationState.Progress, org.linphone.core.RegistrationState.Refreshing ->
+                        ctx.getString(R.string.securelink_check_reg_progress)
+                    org.linphone.core.RegistrationState.Failed -> ctx.getString(R.string.securelink_check_reg_failed)
+                    else -> ctx.getString(R.string.securelink_check_reg_none)
+                }
+                val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }
+                val mark = if (account.state == org.linphone.core.RegistrationState.Ok) "✓" else "✗"
+                lines.add(ctx.getString(R.string.securelink_check_reg, mark, (if (several) "$circle – " else "") + state))
+                account.params.serverAddress?.let { addr ->
+                    val host = addr.domain.orEmpty()
+                    if (host.isNotEmpty()) servers.add(host to (if (addr.port > 0) addr.port else 5061))
+                }
+                if (account.params.pushNotificationAllowed && !account.params.pushNotificationConfig?.prid.isNullOrEmpty()) push = true
+            }
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                for ((host, port) in servers) {
+                    lines.add(
+                        try {
+                            java.net.Socket().use { it.connect(java.net.InetSocketAddress(host, port), 5000) }
+                            ctx.getString(R.string.securelink_check_server_ok, "$host:$port")
+                        } catch (e: Exception) {
+                            ctx.getString(R.string.securelink_check_server_fail, "$host:$port", e.javaClass.simpleName)
+                        }
+                    )
+                }
+                lines.add(ctx.getString(if (push) R.string.securelink_check_push_ok else R.string.securelink_check_push_off))
+                val nm = androidx.core.app.NotificationManagerCompat.from(ctx)
+                lines.add(ctx.getString(if (nm.areNotificationsEnabled()) R.string.securelink_check_notif_ok else R.string.securelink_check_notif_off))
+                if (android.os.Build.VERSION.SDK_INT >= 34 && !nm.canUseFullScreenIntent()) {
+                    lines.add(ctx.getString(R.string.securelink_check_fullscreen_off))
+                }
+                val mic = androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.RECORD_AUDIO) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                lines.add(ctx.getString(if (mic) R.string.securelink_check_mic_ok else R.string.securelink_check_mic_off))
+                val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
+                val caps = cm?.getNetworkCapabilities(cm.activeNetwork)
+                lines.add(
+                    ctx.getString(
+                        when {
+                            caps == null || !caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) -> R.string.securelink_check_net_none
+                            caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) -> R.string.securelink_check_net_wifi
+                            caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) -> R.string.securelink_check_net_cell
+                            else -> R.string.securelink_check_net_other
+                        }
+                    )
+                )
+                lines.add(ctx.getString(R.string.securelink_check_version, BuildConfig.VERSION_NAME))
+                Log.i("$TAG Connection check:\n${lines.joinToString("\n")}")
+                connectionCheckEvent.postValue(Event(lines.joinToString("\n")))
             }
         }
     }

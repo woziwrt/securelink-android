@@ -105,6 +105,25 @@ class HelpFragment : GenericMainFragment() {
             }
         }
 
+        // SecureLink: connection check – lines with ✓ / ✗ the user can copy and send to the administrator
+        binding.setConnectionCheckClickListener {
+            (requireActivity() as GenericActivity).showGreenToast(getString(R.string.securelink_check_running), R.drawable.info)
+            viewModel.runConnectionCheck()
+        }
+        viewModel.connectionCheckEvent.observe(viewLifecycleOwner) {
+            it.consume { text ->
+                AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.securelink_check_dialog_title)
+                    .setMessage(text + "\n\n" + getString(R.string.securelink_check_hint))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setNeutralButton(R.string.securelink_check_copy) { _, _ ->
+                        val clip = requireContext().getSystemService(android.content.ClipboardManager::class.java)
+                        clip?.setPrimaryClip(android.content.ClipData.newPlainText("SecureLink", text))
+                    }
+                    .show()
+            }
+        }
+
         viewModel.newVersionAvailableEvent.observe(viewLifecycleOwner) {
             it.consume { pair ->
                 val version = pair.first
