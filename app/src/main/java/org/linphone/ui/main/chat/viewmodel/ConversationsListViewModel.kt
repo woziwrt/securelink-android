@@ -123,17 +123,7 @@ class ConversationsListViewModel
 
         @WorkerThread
         override fun onMessageSent(core: Core, chatRoom: ChatRoom, message: ChatMessage) {
-            val id = LinphoneUtils.getConversationId(chatRoom)
-            val found = conversations.value.orEmpty().find {
-                it.conversationModel?.id == id
-            }
-            if (found == null) {
-                Log.i("$TAG Message sent for a conversation not yet in the list (probably was empty), adding it")
-                addChatRoom(chatRoom)
-            } else {
-                Log.i("$TAG Message sent for an existing conversation, re-order them")
-                reorderChatRooms()
-            }
+            onConversationActivity(chatRoom, "sent")
         }
 
         @WorkerThread
@@ -142,18 +132,31 @@ class ConversationsListViewModel
             chatRoom: ChatRoom,
             messages: Array<out ChatMessage>
         ) {
-            val id = LinphoneUtils.getConversationId(chatRoom)
-            val found = conversations.value.orEmpty().find {
-                it.conversationModel?.id == id
-            }
-            if (found == null) {
-                Log.i("$TAG Message(s) received for a conversation not yet in the list (probably was empty), adding it")
-                addChatRoom(chatRoom)
-            } else {
-                Log.i("$TAG Message(s) received for an existing conversation, re-order them")
-                reorderChatRooms()
-            }
+            onConversationActivity(chatRoom, "received")
         }
+    }
+
+    @WorkerThread
+    private fun onConversationActivity(chatRoom: ChatRoom, what: String) {
+        val id = LinphoneUtils.getConversationId(chatRoom)
+        val list = conversations.value.orEmpty()
+        if (list.any { it.conversationModel?.id == id }) {
+            Log.i("$TAG Message(s) $what for an existing conversation, re-order them")
+            reorderChatRooms()
+            return
+        }
+        // SecureLink: when the other side deletes a 1-1 conversation and writes again, the core exhumes our chat room –
+        // same object, new conference id. A row built before still carries the old id, so a tap ends in "Conversation
+        // was not found" and addChatRoom() skips the room as already listed. Rebuild that row with the current id.
+        val stale = list.find { it.conversationModel?.chatRoom?.identifier == chatRoom.identifier }
+        if (stale == null) {
+            Log.i("$TAG Message(s) $what for a conversation not yet in the list (probably was empty), adding it")
+            addChatRoom(chatRoom)
+            return
+        }
+        Log.i("$TAG Conversation [${stale.conversationModel?.id}] is now [$id] (exhumed), rebuilding its row")
+        stale.destroy()
+        reorderChatRooms(list.map { if (it === stale) ConversationModelWrapper(ConversationModel(chatRoom)) else it })
     }
 
     private val contactsListener = object : ContactsManager.ContactsListener {
@@ -317,15 +320,16 @@ class ConversationsListViewModel
     }
 
     @WorkerThread
-    private fun reorderChatRooms() {
+    private fun reorderChatRooms(list: List<ConversationModelWrapper>? = null) {
         if (currentFilter.isNotEmpty()) {
             Log.w("$TAG List filter isn't empty, do not re-order list")
+            if (list != null) conversations.postValue(ArrayList(list))
             return
         }
 
         Log.i("$TAG Re-ordering conversations")
         val sortedList = arrayListOf<ConversationModelWrapper>()
-        sortedList.addAll(conversations.value.orEmpty())
+        sortedList.addAll(list ?: conversations.value.orEmpty())
         sortedList.sortByDescending {
             it.conversationModel?.chatRoom?.lastUpdateTime
         }
