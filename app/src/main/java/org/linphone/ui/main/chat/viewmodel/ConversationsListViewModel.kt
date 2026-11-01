@@ -163,10 +163,18 @@ class ConversationsListViewModel
         @WorkerThread
         override fun onContactsLoaded() {
             Log.i("$TAG Contacts have been (re)loaded, updating list")
-            for (model in conversations.value.orEmpty()) {
-                if (model.isConversation) {
-                    model.conversationModel?.computeParticipants()
-                    model.conversationModel?.updateLastMessage()
+            // SecureLink: at start the list is computed (and posted) before the directories arrive; read right after a
+            // directory loaded, conversations.value could still be the old (empty) list because the main thread had not
+            // applied the post yet – the rows then kept bare numbers until the next refresh. Going through the main thread
+            // first makes sure every pending postValue is applied before the rows are updated.
+            coreContext.postOnMainThread {
+                coreContext.postOnCoreThread {
+                    for (model in conversations.value.orEmpty()) {
+                        if (model.isConversation) {
+                            model.conversationModel?.computeParticipants()
+                            model.conversationModel?.updateLastMessage()
+                        }
+                    }
                 }
             }
         }
