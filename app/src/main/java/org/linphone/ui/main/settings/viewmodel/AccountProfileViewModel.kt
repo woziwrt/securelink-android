@@ -193,7 +193,6 @@ class AccountProfileViewModel
 
         coreContext.postOnCoreThread { core ->
             hideAccountSettings.postValue(corePreferences.hideAccountSettings)
-            refreshDeletionRequested(core)
             hideSipAddresses.postValue(corePreferences.hideSipAddresses)
             dialPlansLabelList.add("") // To allow removing selected dial plan
 
@@ -225,6 +224,8 @@ class AccountProfileViewModel
             if (found != null) {
                 Log.i("$TAG Found matching account [$found]")
                 account = found
+                // SecureLink: per account – only once the account is known (init runs before this and crashed on it)
+                refreshDeletionRequested(core)
                 accountModel.postValue(AccountModel(account))
                 isCurrentlySelectedModeSecure.postValue(isEndToEndEncryptionMandatory())
                 registerEnabled.postValue(account.params.isRegisterEnabled)
