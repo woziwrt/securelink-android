@@ -23,6 +23,7 @@ import org.linphone.core.Account
 import org.linphone.core.Address
 import org.linphone.core.ChatRoom
 import org.linphone.core.Config
+import org.linphone.core.ChatMessage
 import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.FriendList
@@ -68,6 +69,27 @@ object SecureLinkAccounts {
     @WorkerThread
     fun setting(account: Account?, key: String): String {
         return account?.params?.getCustomParam(PARAM_PREFIX + key).orEmpty()
+    }
+
+    /**
+     * A conversation whose record the chat server dropped (fewer metadata, securelink-metadata-cleanup) and the other
+     * side started again: liblinphone keeps its subscription to that conversation's events as "terminated" and refuses
+     * the message at once (NotDelivered) until the conference list is subscribed again – what entering the background
+     * and the foreground does. So: resubscribe, then send the same message once more (as the robot, 1. 11. 2026).
+     */
+    @WorkerThread
+    fun retryIfRefused(core: Core, message: ChatMessage) {
+        if (message.state != ChatMessage.State.NotDelivered) return
+        if (!message.chatRoom.hasCapability(ChatRoom.Capabilities.Encrypted.toInt())) return
+        Log.w("$TAG Message refused at once – subscribing to the conversations again, then sending it once more")
+        core.enterBackground()
+        core.enterForeground()
+        coreContext.postOnCoreThreadDelayed({ _ ->
+            if (message.state == ChatMessage.State.NotDelivered) {
+                Log.i("$TAG Sending the refused message once more")
+                message.send()
+            }
+        }, 4000)
     }
 
     /**

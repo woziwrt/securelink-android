@@ -390,6 +390,7 @@ class SendMessageInConversationViewModel
             if (message.contents.isNotEmpty()) {
                 Log.i("$TAG Sending message")
                 message.send()
+                SecureLinkAccounts.retryIfRefused(coreContext.core, message)
                 messageSentEvent.postValue(Event(message))
             }
 
