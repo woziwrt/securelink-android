@@ -38,6 +38,7 @@ import org.linphone.ui.GenericViewModel
 import org.linphone.utils.AppUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
+import org.linphone.utils.SecureLinkAccounts
 import org.linphone.utils.SecureLinkAdmin
 
 class HelpViewModel
@@ -65,6 +66,11 @@ class HelpViewModel
     val termsUrl = MutableLiveData<String>()
 
     val supportEmail = MutableLiveData<String>()
+
+    // SecureLink: with two servers (circles) each has its own terms, privacy policy and support – key → (circle, value),
+    // one entry per different value; a tap then asks which circle when there is more than one
+    @Volatile
+    var perCircle: Map<String, List<Pair<String, String>>> = emptyMap()
 
     val uploadLogsAvailable = MutableLiveData<Boolean>()
 
@@ -185,6 +191,12 @@ class HelpViewModel
             privacyUrl.postValue(SecureLinkAdmin.setting(core, "privacy_url"))
             termsUrl.postValue(SecureLinkAdmin.setting(core, "terms_url"))
             supportEmail.postValue(SecureLinkAdmin.setting(core, "support_email"))
+            perCircle = listOf("privacy_url", "terms_url", "support_email").associateWith { key ->
+                core.accountList.map { account ->
+                    val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }
+                    circle to SecureLinkAdmin.setting(core, key, account)
+                }.filter { it.second.isNotEmpty() }.distinctBy { it.second }
+            }
         }
     }
 

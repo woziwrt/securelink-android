@@ -381,10 +381,8 @@ class ConversationInfoViewModel
                 for (participant in chatRoom.participants) {
                     val address = participant.address
                     // Do not remove ourselves if not in participants list anymore
-                    if (LinphoneUtils.getDefaultAccount()?.params?.identityAddress?.weakEqual(
-                            address
-                        ) == true
-                    ) {
+                    // (SecureLink, two servers: "ourselves" is this group's account, not necessarily the default one)
+                    if (chatRoom.localAddress.weakEqual(address)) {
                         continue
                     }
 
@@ -429,6 +427,15 @@ class ConversationInfoViewModel
                             toAddList.add(address)
                         }
                     }
+                }
+
+                // SecureLink, two servers: a group lives on one server and lets in only its own people – as when it was
+                // created (StartConversationViewModel), nobody from another circle is added to an existing one either
+                val groupDomain = chatRoom.localAddress.domain
+                if (toAddList.any { it.domain != groupDomain }) {
+                    Log.w("$TAG Some of the people to add belong to another circle than this group, adding nobody")
+                    showRedToast(R.string.securelink_group_one_company_toast, R.drawable.warning_circle)
+                    return@postOnCoreThread
                 }
 
                 if (toAddList.isNotEmpty()) {

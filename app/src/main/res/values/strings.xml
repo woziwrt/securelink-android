@@ -1080,6 +1080,7 @@
     <string name="securelink_group_one_company_toast">A group can only have people from one circle – the name after each contact shows which one</string>
     <string name="securelink_signed_out_message">Your administrator sent you a new invitation or blocked this phone. To sign in again, open the link from the invitation or scan the new code.</string>
     <string name="securelink_signed_out_ok">I understand</string>
+    <string name="securelink_pick_circle">Which circle?</string>
     <string name="securelink_permissions_title">Microphone and notifications</string>
     <string name="securelink_permissions_message">SecureLink needs the microphone for calls, and notifications so that your phone rings and shows new messages even when the app is closed. Android will then ask whether SecureLink may “record audio” – that is what Android calls the microphone; SecureLink never records calls. Choose “While using the app” and allow notifications too.</string>
     <string name="securelink_permissions_ok">Continue</string>

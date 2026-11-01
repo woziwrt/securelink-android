@@ -27,6 +27,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.UiThread
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.fragment.findNavController
 import org.linphone.R
 import org.linphone.core.tools.Log
@@ -80,11 +81,11 @@ class HelpFragment : GenericMainFragment() {
         // SecureLink (as iOS): no Belledonne links – the "user guide" row is our terms of use, the "translate" row writes
         // to support; privacy, terms and support address come from the server profile
         binding.setUserGuideClickListener {
-            openUrlInBrowser(viewModel.termsUrl.value.orEmpty())
+            pickCircle("terms_url", viewModel.termsUrl.value.orEmpty()) { openUrlInBrowser(it) }
         }
 
         binding.setPrivacyPolicyClickListener {
-            openUrlInBrowser(viewModel.privacyUrl.value.orEmpty())
+            pickCircle("privacy_url", viewModel.privacyUrl.value.orEmpty()) { openUrlInBrowser(it) }
         }
 
         binding.setLicensesClickListener {
@@ -93,12 +94,13 @@ class HelpFragment : GenericMainFragment() {
         }
 
         binding.setTranslateClickListener {
-            val email = viewModel.supportEmail.value.orEmpty()
-            if (email.isNotEmpty()) {
-                try {
-                    startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email?subject=SecureLink")))
-                } catch (e: Exception) {
-                    Log.e("$TAG No e-mail app: $e")
+            pickCircle("support_email", viewModel.supportEmail.value.orEmpty()) { email ->
+                if (email.isNotEmpty()) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email?subject=SecureLink")))
+                    } catch (e: Exception) {
+                        Log.e("$TAG No e-mail app: $e")
+                    }
                 }
             }
         }
@@ -154,6 +156,20 @@ class HelpFragment : GenericMainFragment() {
         }
 
         dialog.show()
+    }
+
+    /** SecureLink: two circles with different values → ask which one; otherwise straight to the only (or default) one */
+    private fun pickCircle(key: String, fallback: String, open: (String) -> Unit) {
+        val choices = viewModel.perCircle[key].orEmpty()
+        if (choices.size <= 1) {
+            open(choices.firstOrNull()?.second ?: fallback)
+            return
+        }
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.securelink_pick_circle)
+            .setItems(choices.map { it.first }.toTypedArray()) { _, which -> open(choices[which].second) }
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .show()
     }
 
     private fun openUrlInBrowser(url: String) {
