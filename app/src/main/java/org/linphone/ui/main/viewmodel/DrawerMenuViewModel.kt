@@ -33,6 +33,7 @@ import org.linphone.ui.GenericViewModel
 import org.linphone.ui.main.model.AccountModel
 import org.linphone.ui.main.model.ShortcutModel
 import org.linphone.utils.Event
+import org.linphone.utils.SecureLinkAccounts
 
 class DrawerMenuViewModel
     @UiThread
@@ -206,7 +207,9 @@ class DrawerMenuViewModel
                 "$TAG Max number of allowed accounts reached [$maxAccount], hiding add account button"
             )
         }
-        hideAddAccount.postValue(true) // SecureLink: one account, from a QR code
+        // SecureLink: one account from a QR code (max_account=1 in linphonerc_factory) – test builds add another
+        // circle here (QR code), as iOS
+        hideAddAccount.postValue(!SecureLinkAccounts.enabled)
     }
 
     @WorkerThread
