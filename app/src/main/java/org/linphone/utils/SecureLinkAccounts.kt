@@ -72,6 +72,70 @@ object SecureLinkAccounts {
     }
 
     /**
+     * "Block and wipe" (v2, 1. 11. 2026): the server refused this account's sign-in. Ask the server (/wipe next to the
+     * directory, with the account's own login – a blocked account may still ask there) whether the administrator wants
+     * the phone wiped. Only an explicit "wipe" answer counts: a plain block, a new invitation or a server fault never
+     * deletes anything. [done] gets true on the core thread when the account and its data are gone.
+     */
+    @WorkerThread
+    fun wipeIfAsked(core: Core, account: Account, done: (Boolean) -> Unit) {
+        val dir = setting(account, "dir_url").ifEmpty { core.config.getString("misc", "contacts-vcard-list", "").orEmpty() }
+        val auth = account.findAuthInfo()
+        if (!dir.endsWith("/dir") || auth == null) {
+            done(false)
+            return
+        }
+        val url = dir.removeSuffix("/dir") + "/wipe"
+        val user = auth.username.orEmpty()
+        val ha1 = if (auth.algorithm.orEmpty().uppercase() == "SHA-256") auth.ha1.orEmpty() else ""
+        val password = auth.password.orEmpty()
+        Thread {
+            val answer = try {
+                getWithDigest(url, user, ha1, password)?.trim()
+            } catch (e: Exception) {
+                Log.w("$TAG Wipe check failed: $e")
+                null
+            }
+            coreContext.postOnCoreThread { c ->
+                if (answer != "wipe" || c.accountList.none { it == account }) {
+                    done(false)
+                    return@postOnCoreThread
+                }
+                Log.w("$TAG The administrator blocked this phone to be wiped – deleting the account and its data")
+                wipeAccount(c, account)
+                done(true)
+            }
+        }.start()
+    }
+
+    /** The account, its conversations, call logs and directory go; the last account takes the rest along (as "sign out"). */
+    @WorkerThread
+    fun wipeAccount(core: Core, account: Account) {
+        val directory = setting(account, "dir_url")
+        val wasLast = core.accountList.size <= 1
+        val auth = account.findAuthInfo()
+        core.removeAccountWithData(account)
+        // blocked: no unregister will come to take the credentials along
+        if (auth != null) core.removeAuthInfo(auth)
+        if (directory.isNotEmpty()) core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
+        if (wasLast) {
+            core.clearAllAuthInfo()
+            SecureLinkAdmin.scheduleZrtpCacheWipe(core)
+            core.config.cleanEntry("misc", "contacts-vcard-list")
+            core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
+            core.config.sync()
+            for (list in core.friendsLists) {
+                if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
+                    core.removeFriendList(list)
+                } else {
+                    for (friend in list.friends) list.removeFriend(friend)
+                }
+            }
+        }
+        coreContext.contactsManager.notifyContactsListChanged()
+    }
+
+    /**
      * A conversation whose record the chat server dropped (fewer metadata, securelink-metadata-cleanup) and the other
      * side started again: liblinphone keeps its subscription to that conversation's events as "terminated" and refuses
      * the message at once (NotDelivered) until the conference list is subscribed again – what entering the background

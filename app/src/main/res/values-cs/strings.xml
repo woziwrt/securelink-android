@@ -947,6 +947,8 @@
     <string name="securelink_sas_message">Řekněte si navzájem bezpečnostní slovo. Musí být na obou telefonech stejné.</string>
     <string name="securelink_sas_message_new_device">Druhá strana má nové zařízení. Řekněte si navzájem bezpečnostní slovo a potvrďte, že souhlasí.</string>
     <string name="securelink_sas_it_matches">Souhlasí</string>
+    <string name="securelink_wiped_title">Tento telefon byl vymazán</string>
+    <string name="securelink_wiped_message">Správce tento telefon zablokoval a nechal vymazat: tento účet, jeho konverzace a kontakty z něj byly smazány.</string>
     <string name="securelink_signed_out_title">Tento telefon byl odhlášen</string>
     <string name="securelink_group_one_company_toast">Skupina může mít jen lidi z jednoho okruhu – kam kdo patří, je vidět za jeho jménem</string>
     <string name="securelink_signed_out_message">Správce vám poslal novou pozvánku nebo tento telefon zablokoval. Pro nové přihlášení otevřete odkaz z pozvánky nebo naskenujte nový kód.</string>

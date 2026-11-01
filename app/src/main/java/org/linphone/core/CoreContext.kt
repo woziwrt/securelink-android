@@ -113,6 +113,10 @@ class CoreContext
     }
 
     // SecureLink: the server refused this phone's sign-in (new invitation or blocked) – told once, no password dialog
+    val wipedByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
     val signedOutByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData<Event<Boolean>>()
     }
@@ -621,7 +625,14 @@ class CoreContext
                         val params = accountFound.params.clone()
                         params.isRegisterEnabled = false
                         accountFound.params = params
-                        signedOutByAdministratorEvent.postValue(Event(true))
+                        // "block and wipe": only when the server says so for this very account (v2, 1. 11. 2026)
+                        SecureLinkAccounts.wipeIfAsked(core, accountFound) { wiped ->
+                            if (wiped) {
+                                wipedByAdministratorEvent.postValue(Event(true))
+                            } else {
+                                signedOutByAdministratorEvent.postValue(Event(true))
+                            }
+                        }
                     }
                 }
                 AuthMethod.Tls -> {

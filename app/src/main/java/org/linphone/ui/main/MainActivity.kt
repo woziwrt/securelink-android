@@ -371,6 +371,34 @@ class MainActivity : GenericActivity() {
             }
         }
 
+        // SecureLink "block and wipe": the account and its data are already gone – say so; no account left → first screen
+        coreContext.wipedByAdministratorEvent.observe(this) {
+            it.consume {
+                val model = ConfirmationDialogModel()
+                val dialog = DialogUtils.getSecureLinkConfirmDialog(
+                    this,
+                    model,
+                    getString(R.string.securelink_wiped_title),
+                    getString(R.string.securelink_wiped_message),
+                    getString(R.string.securelink_signed_out_ok)
+                )
+                val close = {
+                    dialog.dismiss()
+                    coreContext.postOnCoreThread { core ->
+                        if (core.accountList.isEmpty()) {
+                            coreContext.postOnMainThread {
+                                startActivity(Intent(this, AssistantActivity::class.java))
+                                finish()
+                            }
+                        }
+                    }
+                }
+                model.dismissEvent.observe(this) { e -> e.consume { close() } }
+                model.confirmEvent.observe(this) { e -> e.consume { close() } }
+                dialog.show()
+            }
+        }
+
         coreContext.signedOutByAdministratorEvent.observe(this) {
             it.consume {
                 val model = ConfirmationDialogModel()
