@@ -193,15 +193,18 @@ class HelpViewModel
             developerSettingsEnabled.postValue(corePreferences.showDeveloperSettings)
             checkUpdateAvailable.postValue(corePreferences.checkForUpdateServerUrl.isNotEmpty())
             uploadLogsAvailable.postValue(!core.logCollectionUploadServerUrl.isNullOrEmpty())
-            privacyUrl.postValue(SecureLinkAdmin.setting(core, "privacy_url"))
-            termsUrl.postValue(SecureLinkAdmin.setting(core, "terms_url"))
-            supportEmail.postValue(SecureLinkAdmin.setting(core, "support_email"))
             perCircle = listOf("privacy_url", "terms_url", "support_email").associateWith { key ->
                 core.accountList.map { account ->
                     val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }
                     circle to SecureLinkAdmin.setting(core, key, account)
                 }.filter { it.second.isNotEmpty() }.distinctBy { it.second }
             }
+
+            // the rows show when ANY circle has the value – the default account (e.g. a lab server) may have none
+            fun shown(key: String) = SecureLinkAdmin.setting(core, key).ifEmpty { perCircle[key]?.firstOrNull()?.second.orEmpty() }
+            privacyUrl.postValue(shown("privacy_url"))
+            termsUrl.postValue(shown("terms_url"))
+            supportEmail.postValue(shown("support_email"))
         }
     }
 
