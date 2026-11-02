@@ -344,6 +344,7 @@ class AccountProfileViewModel
             if (!done) {
                 done = true
                 core.clearAllAuthInfo()
+                core.config.cleanSection(org.linphone.utils.SecureLinkAccounts.NAMES_SECTION)
                 Log.i("$TAG SecureLink: credentials removed after sign-out")
             }
         }

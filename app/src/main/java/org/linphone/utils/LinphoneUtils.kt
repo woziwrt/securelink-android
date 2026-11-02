@@ -159,6 +159,13 @@ class LinphoneUtils {
                 if (!localDisplayName.isNullOrEmpty()) {
                     return localDisplayName
                 }
+                // SecureLink: the name remembered from the circle's directory (the app woken by a push has no directory yet)
+                val remembered = address.username?.let {
+                    coreContext.core.config.getString(SecureLinkAccounts.NAMES_SECTION, it, "")
+                }
+                if (!remembered.isNullOrEmpty()) {
+                    return remembered
+                }
             }
 
             // Do not return an empty display name

@@ -39,6 +39,7 @@ import org.linphone.core.tools.Log
 object SecureLinkAccounts {
     private const val TAG = "[SecureLink Accounts]"
     private const val SECTION = "securelink_account"
+    const val NAMES_SECTION = "securelink_names"
     private const val PARAM_PREFIX = "sl_"
     private val KEYS = listOf(
         "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url",
@@ -126,6 +127,7 @@ object SecureLinkAccounts {
         if (directory.isNotEmpty()) core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
         if (wasLast) {
             core.clearAllAuthInfo()
+            core.config.cleanSection(NAMES_SECTION)
             SecureLinkAdmin.scheduleZrtpCacheWipe(core)
             core.config.cleanEntry("misc", "contacts-vcard-list")
             core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
@@ -378,6 +380,13 @@ object SecureLinkAccounts {
             }
         }
         Log.i("$TAG Directory of [$name]: $count people")
+        // SecureLink: woken by a call's push the app has no directory yet (it is downloaded, not stored) and showed the bare
+        // account number (Petr 2. 11. 2026) – remember the names for that moment, as iOS (securelink_names). Display only.
+        for (friend in list.friends) {
+            val user = friend.address?.username
+            val shown = friend.name
+            if (!user.isNullOrEmpty() && !shown.isNullOrEmpty()) core.config.setString(NAMES_SECTION, user, shown)
+        }
         core.friendsLists.forEach { Log.i("$TAG   list [${it.displayName}] ${it.type} [${it.uri}]: ${it.friends.size}") }
         coreContext.contactsManager.onDirectoryRefreshed(list)
     }
