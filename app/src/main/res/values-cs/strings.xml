@@ -1034,4 +1034,9 @@
     <string name="securelink_enc_messages">Zprávy: %s</string>
     <string name="securelink_enc_pq">postkvantové</string>
     <string name="securelink_circles_not_allowed">Další okruh v tomto telefonu nejde přidat – správce okruhu to nepovoluje. Zeptejte se ho.</string>
+    <string name="securelink_about_encryption_title">Šifrování</string>
+    <string name="securelink_about_encryption_calls">Hovory: X448 + ML-KEM-1024 (postkvantové), hlas AES-256-GCM, bezpečnostní slovo.</string>
+    <string name="securelink_about_encryption_messages">Zprávy (postkvantové, koncové):\n%s</string>
+    <string name="securelink_about_encryption_connection">Spojení se serverem: TLS 1.3.</string>
+    <string name="securelink_about_encryption_always">Šifrování nejde vypnout.</string>
 </resources>

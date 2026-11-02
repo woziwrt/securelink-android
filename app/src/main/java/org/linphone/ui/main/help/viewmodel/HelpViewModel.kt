@@ -56,6 +56,9 @@ class HelpViewModel
 
     val sdkVersion = MutableLiveData<String>()
 
+    // SecureLink: what protects messages in each circle (the account's LIME algorithm), for "Encryption" in About
+    val messagesEncryption = MutableLiveData<String>()
+
     val firebaseProjectId = MutableLiveData<String>()
 
     val checkUpdateAvailable = MutableLiveData<Boolean>()
@@ -193,6 +196,20 @@ class HelpViewModel
             developerSettingsEnabled.postValue(corePreferences.showDeveloperSettings)
             checkUpdateAvailable.postValue(corePreferences.checkForUpdateServerUrl.isNotEmpty())
             uploadLogsAvailable.postValue(!core.logCollectionUploadServerUrl.isNullOrEmpty())
+            val lines = core.accountList.map { account ->
+                val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }
+                val words = when (val algo = account.params.limeAlgo.orEmpty().split(",").first()) {
+                    "c448mlk1024" -> "X448 + ML-KEM-1024"
+                    "c25519mlk512" -> "X25519 + ML-KEM-512"
+                    "c25519k512" -> "X25519 + Kyber-512"
+                    "" -> "–"
+                    else -> algo
+                }
+                if (core.accountList.size > 1) "$circle: $words" else words
+            }
+            messagesEncryption.postValue(
+                AppUtils.getFormattedString(R.string.securelink_about_encryption_messages, lines.joinToString("\n"))
+            )
             perCircle = listOf("privacy_url", "terms_url", "support_email").associateWith { key ->
                 core.accountList.map { account ->
                     val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }

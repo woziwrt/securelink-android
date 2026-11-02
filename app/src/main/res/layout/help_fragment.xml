@@ -316,6 +316,71 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/privacy_policy_subtitle" />
 
+                        <!-- SecureLink: what protects calls, messages and the connection, in one place (Petr 2. 11. 2026) -->
+                        <ImageView
+                            android:id="@+id/encryption_icon"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="16dp"
+                            android:src="@drawable/lock_key"
+                            android:contentDescription="@null"
+                            app:tint="?attr/color_main1_500"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/encryption" />
+
+                        <LinearLayout
+                            android:id="@+id/encryption"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginTop="16dp"
+                            android:orientation="vertical"
+                            app:layout_constraintTop_toBottomOf="@id/version_flow"
+                            app:layout_constraintStart_toEndOf="@id/encryption_icon"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/header_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/securelink_about_encryption_title"/>
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/default_text_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/securelink_about_encryption_calls"
+                                android:textSize="14sp"
+                                android:textColor="?attr/color_main2_600" />
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/default_text_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@{viewModel.messagesEncryption}"
+                                android:textSize="14sp"
+                                android:textColor="?attr/color_main2_600" />
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/default_text_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/securelink_about_encryption_connection"
+                                android:textSize="14sp"
+                                android:textColor="?attr/color_main2_600" />
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/header_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/securelink_about_encryption_always"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
                         <ImageView
                             android:onClick="@{licensesClickListener}"
                             android:id="@+id/open_source_licenses_icon"
@@ -342,7 +407,7 @@
                             android:drawableEnd="@drawable/arrow_square_out"
                             android:drawablePadding="5dp"
                             app:drawableTint="?attr/color_main2_600"
-                            app:layout_constraintTop_toBottomOf="@id/version_flow"
+                            app:layout_constraintTop_toBottomOf="@id/encryption"
                             app:layout_constraintStart_toEndOf="@id/open_source_licenses_icon"
                             app:layout_constraintEnd_toEndOf="parent"/>
 

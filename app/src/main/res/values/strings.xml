@@ -1162,4 +1162,9 @@
     <string name="securelink_enc_messages">Messages: %s</string>
     <string name="securelink_enc_pq">post-quantum</string>
     <string name="securelink_circles_not_allowed">Another circle cannot be added on this phone – a circle\'s administrator does not allow it. Ask them.</string>
+    <string name="securelink_about_encryption_title">Encryption</string>
+    <string name="securelink_about_encryption_calls">Calls: X448 + ML-KEM-1024 (post-quantum), voice AES-256-GCM, security word.</string>
+    <string name="securelink_about_encryption_messages">Messages (post-quantum, end-to-end):\n%s</string>
+    <string name="securelink_about_encryption_connection">Connection to the server: TLS 1.3.</string>
+    <string name="securelink_about_encryption_always">Encryption cannot be switched off.</string>
 </resources>
