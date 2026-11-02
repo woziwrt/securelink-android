@@ -316,6 +316,46 @@
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/privacy_policy_subtitle" />
 
+                        <!-- SecureLink PIN lock (optional) with an emergency PIN (Petr 2. 11. 2026) -->
+                        <ImageView
+                            android:id="@+id/pin_lock_icon"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="16dp"
+                            android:src="@drawable/password"
+                            android:contentDescription="@null"
+                            app:tint="?attr/color_main1_500"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="@id/pin_lock" />
+
+                        <LinearLayout
+                            android:id="@+id/pin_lock"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="16dp"
+                            android:layout_marginTop="16dp"
+                            android:orientation="vertical"
+                            app:layout_constraintTop_toBottomOf="@id/version_flow"
+                            app:layout_constraintStart_toEndOf="@id/pin_lock_icon"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/header_style"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/securelink_pin_row_title"/>
+
+                            <androidx.appcompat.widget.AppCompatTextView
+                                style="@style/default_text_style"
+                                android:id="@+id/pin_lock_state"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/securelink_pin_row_off"
+                                android:textSize="14sp"
+                                android:textColor="?attr/color_main2_600" />
+                        </LinearLayout>
+
                         <!-- SecureLink: what protects calls, messages and the connection, in one place (Petr 2. 11. 2026) -->
                         <ImageView
                             android:id="@+id/encryption_icon"
@@ -336,7 +376,7 @@
                             android:layout_marginEnd="16dp"
                             android:layout_marginTop="16dp"
                             android:orientation="vertical"
-                            app:layout_constraintTop_toBottomOf="@id/version_flow"
+                            app:layout_constraintTop_toBottomOf="@id/pin_lock"
                             app:layout_constraintStart_toEndOf="@id/encryption_icon"
                             app:layout_constraintEnd_toEndOf="parent">
 

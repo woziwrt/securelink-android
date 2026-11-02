@@ -30,6 +30,11 @@ import androidx.annotation.MainThread
 import androidx.core.content.ContextCompat
 import org.linphone.R
 import org.linphone.core.tools.Log
+import org.linphone.utils.EmergencyWipe
+import org.linphone.utils.SecureLinkPin
+import org.linphone.LinphoneApplication.Companion.coreContext
+import android.content.Intent
+import android.widget.GridLayout
 
 /**
  * SecureLink app lock (as iOS AppLock in LinphoneApp.swift): the phone's own fingerprint / face / PIN, no PIN of our
@@ -47,8 +52,15 @@ object AppLock {
     // is false in every build that leaves the Mac, so this cannot be forgotten (Petr 2. 11. 2026)
     private val enabled = !org.linphone.BuildConfig.DEBUG
 
-    var locked = enabled
+    // the SecureLink PIN (optional, chosen by the user) locks also in debug builds
+    private val active: Boolean
+        get() = enabled || SecureLinkPin.isEnabled()
+
+    var locked = active
         private set
+
+    private var wrongPins = 0
+    private var pinBlockedUntil = 0L
 
     private var startedActivities = 0
     private var backgroundSince = 0L
@@ -58,7 +70,7 @@ object AppLock {
     fun activityStarted() {
         if (startedActivities == 0 && backgroundSince > 0L) {
             val away = SystemClock.elapsedRealtime() - backgroundSince
-            if (away >= GRACE_MS && enabled) locked = true
+            if (away >= GRACE_MS && active) locked = true
             Log.i("$TAG Back in the foreground after [${away / 1000}] s, locked=$locked")
             backgroundSince = 0L
         }
@@ -78,11 +90,11 @@ object AppLock {
     }
 
     fun idleExpired(): Boolean {
-        return enabled && !locked && SystemClock.elapsedRealtime() - lastTouch >= IDLE_MS
+        return active && !locked && SystemClock.elapsedRealtime() - lastTouch >= IDLE_MS
     }
 
     fun lockNow() {
-        if (!enabled) return
+        if (!active) return
         Log.i("$TAG No touch for [${IDLE_MS / 1000}] s – locking")
         locked = true
     }
@@ -101,7 +113,7 @@ object AppLock {
     }
 
     fun show(activity: GenericActivity) {
-        if (!enabled) return
+        if (!active) return
         val decor = activity.window.decorView as ViewGroup
         if (decor.findViewWithTag<View>(LOCK_VIEW_TAG) != null) return
         Log.i("$TAG Showing the lock screen")
@@ -140,6 +152,10 @@ object AppLock {
     }
 
     fun authenticate(activity: GenericActivity) {
+        if (SecureLinkPin.isEnabled(activity)) {
+            refresh(activity, failed = false)   // the PIN pad is the lock
+            return
+        }
         if (authenticating) return
         if (!deviceIsSecure(activity)) {
             Log.w("$TAG The phone has no screen lock – warning shown")
@@ -198,10 +214,12 @@ object AppLock {
 
     private fun refresh(activity: GenericActivity, failed: Boolean) {
         val view = (activity.window.decorView as ViewGroup).findViewWithTag<ViewGroup>(LOCK_VIEW_TAG) ?: return
-        val noScreenLock = !deviceIsSecure(activity)
+        val pin = SecureLinkPin.isEnabled(activity)
+        val noScreenLock = !pin && !deviceIsSecure(activity)
         view.findViewWithTag<View>("warning").visibility = if (noScreenLock) View.VISIBLE else View.GONE
         view.findViewWithTag<View>("continue").visibility = if (noScreenLock) View.VISIBLE else View.GONE
-        view.findViewWithTag<View>("unlock").visibility = if (failed && !noScreenLock) View.VISIBLE else View.GONE
+        view.findViewWithTag<View>("unlock").visibility = if (failed && !noScreenLock && !pin) View.VISIBLE else View.GONE
+        view.findViewWithTag<View>("pinpad").visibility = if (pin) View.VISIBLE else View.GONE
     }
 
     private fun createLockView(activity: GenericActivity): View {
@@ -272,6 +290,7 @@ object AppLock {
             buttonParams
         )
         column.addView(button("unlock", R.string.securelink_lock_unlock) { authenticate(activity) }, buttonParams)
+        column.addView(createPinPad(activity, dp, blue))
 
         return FrameLayout(activity).apply {
             tag = LOCK_VIEW_TAG
@@ -287,6 +306,99 @@ object AppLock {
                     Gravity.CENTER
                 )
             )
+        }
+    }
+
+    // ---- SecureLink PIN pad (Petr 2. 11. 2026, as iOS)
+
+    private fun createPinPad(activity: GenericActivity, dp: (Int) -> Int, blue: Int): View {
+        val pad = LinearLayout(activity).apply {
+            tag = "pinpad"
+            visibility = View.GONE
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(0, dp(18), 0, 0)
+        }
+        val entered = StringBuilder()
+        val dots = TextView(activity).apply {
+            text = activity.getString(R.string.securelink_pin_enter)
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+            gravity = Gravity.CENTER
+        }
+        val error = TextView(activity).apply {
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            gravity = Gravity.CENTER
+        }
+        val show = {
+            dots.text = if (entered.isEmpty()) activity.getString(R.string.securelink_pin_enter) else "●".repeat(entered.length)
+        }
+        pad.addView(dots)
+        pad.addView(error)
+        val grid = GridLayout(activity).apply { columnCount = 3; setPadding(0, dp(10), 0, 0) }
+        for (key in listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK")) {
+            grid.addView(
+                Button(activity).apply {
+                    text = key
+                    isAllCaps = false
+                    setTextColor(blue)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
+                    backgroundTintList = ColorStateList.valueOf(Color.WHITE)
+                    setOnClickListener {
+                        when (key) {
+                            "⌫" -> if (entered.isNotEmpty()) entered.setLength(entered.length - 1)
+                            "OK" -> if (entered.isNotEmpty()) {
+                                val pin = entered.toString()
+                                entered.setLength(0)
+                                error.text = submitPin(activity, pin)
+                            }
+                            else -> if (entered.length < 8) entered.append(key)
+                        }
+                        show()
+                    }
+                },
+                GridLayout.LayoutParams().apply { width = dp(84); height = dp(64); setMargins(dp(6), dp(6), dp(6), dp(6)) }
+            )
+        }
+        pad.addView(grid)
+        return pad
+    }
+
+    /** The normal PIN opens the app, the emergency PIN erases everything and opens an empty app; returns an error text */
+    private fun submitPin(activity: GenericActivity, pin: String): String {
+        if (SystemClock.elapsedRealtime() < pinBlockedUntil) return activity.getString(R.string.securelink_pin_wrong)
+        return when (SecureLinkPin.check(activity, pin)) {
+            SecureLinkPin.Result.NORMAL -> {
+                wrongPins = 0
+                unlock()
+                hide(activity)
+                ""
+            }
+            SecureLinkPin.Result.EMERGENCY -> {
+                Log.w("$TAG Emergency PIN")
+                val ctx = activity.applicationContext
+                coreContext.postOnCoreThread { core ->
+                    EmergencyWipe.run(core, ctx)
+                    coreContext.postOnMainThread {
+                        unlock()
+                        hide(activity)
+                        activity.startActivity(
+                            Intent(activity, org.linphone.ui.assistant.AssistantActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        )
+                    }
+                }
+                ""
+            }
+            SecureLinkPin.Result.WRONG -> {
+                wrongPins++
+                if (wrongPins >= 5) {
+                    pinBlockedUntil = SystemClock.elapsedRealtime() + 60_000
+                    wrongPins = 0
+                }
+                activity.getString(R.string.securelink_pin_wrong)
+            }
         }
     }
 }

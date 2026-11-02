@@ -88,6 +88,17 @@ class HelpFragment : GenericMainFragment() {
             pickCircle("privacy_url", viewModel.privacyUrl.value.orEmpty()) { openUrlInBrowser(it) }
         }
 
+        // SecureLink PIN lock (optional, Petr 2. 11. 2026): own PIN instead of the screen lock + an emergency PIN
+        val pinState = {
+            binding.root.findViewById<android.widget.TextView>(R.id.pin_lock_state).setText(
+                if (org.linphone.utils.SecureLinkPin.isEnabled(requireContext())) R.string.securelink_pin_row_on else R.string.securelink_pin_row_off
+            )
+        }
+        pinState()
+        binding.root.findViewById<View>(R.id.pin_lock).setOnClickListener {
+            org.linphone.utils.SecureLinkPinSetup.show(requireActivity()) { pinState() }
+        }
+
         binding.setLicensesClickListener {
             // GPLv3: the source of this app is public
             openUrlInBrowser(getString(R.string.securelink_source_url))

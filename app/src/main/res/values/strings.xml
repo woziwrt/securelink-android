@@ -1167,4 +1167,21 @@
     <string name="securelink_about_encryption_messages">Messages (post-quantum, end-to-end):\n%s</string>
     <string name="securelink_about_encryption_connection">Connection to the server: TLS 1.3.</string>
     <string name="securelink_about_encryption_always">Encryption cannot be switched off.</string>
+    <string name="securelink_pin_enter">Enter your SecureLink PIN</string>
+    <string name="securelink_pin_wrong">Wrong PIN</string>
+    <string name="securelink_pin_row_title">SecureLink PIN lock</string>
+    <string name="securelink_pin_row_on">On – your PIN opens the app (the emergency PIN erases everything)</string>
+    <string name="securelink_pin_row_off">Off – the phone screen lock opens the app</string>
+    <string name="securelink_pin_setup_title">SecureLink PIN lock</string>
+    <string name="securelink_pin_setup_text">Your PIN (4–8 digits) then opens the app instead of the phone screen lock.\n\nYou also set an EMERGENCY PIN. If someone forces you to open the app, enter the emergency PIN: the app quietly erases all accounts, messages and contacts and looks empty, as if just installed.\n\nRemember the emergency PIN and tell nobody.</string>
+    <string name="securelink_pin_setup_start">Set the PIN</string>
+    <string name="securelink_pin_new">New PIN (4–8 digits)</string>
+    <string name="securelink_pin_new_again">The PIN once more</string>
+    <string name="securelink_pin_emergency">EMERGENCY PIN (not the normal one)</string>
+    <string name="securelink_pin_emergency_again">Emergency PIN once more</string>
+    <string name="securelink_pin_rules">The PIN must have 4–8 digits</string>
+    <string name="securelink_pin_mismatch">The PINs differ</string>
+    <string name="securelink_pin_same">The emergency PIN must differ from the normal one</string>
+    <string name="securelink_pin_off_title">Switch the PIN lock off</string>
+    <string name="securelink_pin_off_button">Switch off</string>
 </resources>
