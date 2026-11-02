@@ -130,9 +130,12 @@ object AppLock {
         }
         activity.onBackPressedDispatcher.addCallback(activity, back)
         lockView.setTag(R.id.securelink_app_lock_back, back)
-        // screen readers must not read the conversations under the lock either
-        activity.findViewById<View>(android.R.id.content)?.importantForAccessibility =
-            View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        // screen readers must not read the conversations under the lock either – and nothing else may: hidden from
+        // accessibility alone, a window dump (uiautomator) still read names and messages under the lock (Panel 2, 2. 11.)
+        activity.findViewById<View>(android.R.id.content)?.let {
+            it.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            it.visibility = View.INVISIBLE
+        }
         authenticate(activity)
     }
 
@@ -141,8 +144,10 @@ object AppLock {
         decor.findViewWithTag<View>(LOCK_VIEW_TAG)?.let {
             (it.getTag(R.id.securelink_app_lock_back) as? OnBackPressedCallback)?.remove()
             decor.removeView(it)
-            activity.findViewById<View>(android.R.id.content)?.importantForAccessibility =
-                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            activity.findViewById<View>(android.R.id.content)?.let { content ->
+                content.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                content.visibility = View.VISIBLE
+            }
         }
     }
 

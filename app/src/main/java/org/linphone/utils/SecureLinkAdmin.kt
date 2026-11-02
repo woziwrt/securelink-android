@@ -85,6 +85,15 @@ object SecureLinkAdmin {
      */
     @WorkerThread
     fun enforceEncryptedMessaging(core: Core) {
+        // calls too (Panel 2, 2. 11. 2026): ZRTP mandatory and only the post-quantum hybrid key agreements, whatever a
+        // (compromised) server's profile says – a profile could otherwise offer a classic exchange
+        val pq = listOf("MS_ZRTP_KEY_AGREEMENT_K448_MLK1024", "MS_ZRTP_KEY_AGREEMENT_K255_MLK512")
+        val offered = (core.config.getString("sip", "zrtp_key_agreements_suites", "") ?: "")
+            .split(",").map { it.trim() }.filter { it in pq }
+        core.config.setString("sip", "zrtp_key_agreements_suites", offered.ifEmpty { pq }.joinToString(","))
+        core.config.setString("sip", "media_encryption", "zrtp")
+        core.config.setBool("sip", "media_encryption_mandatory", true)
+        core.config.setBool("sip", "enable_go_clear", false)
         for (account in core.accountList) {
             if (!account.params.instantMessagingEncryptionMandatory) {
                 val params = account.params.clone()

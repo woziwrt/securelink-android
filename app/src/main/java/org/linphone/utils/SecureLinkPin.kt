@@ -115,6 +115,15 @@ object EmergencyWipe {
         // (emulator 2. 11. 2026) – it goes as well and is created again from the defaults, as after installation. The
         // caller then restarts the process so that the running core cannot write it back with the old key
         context.filesDir.listFiles()?.forEach { if (it.name.startsWith(".linphonerc") && it.delete()) removed++ }
+        // the push token too (Panel 2: the same token after the wipe tied the empty app to the old account); a new one is
+        // made when the restarted app starts
+        try {
+            com.google.android.gms.tasks.Tasks.await(
+                com.google.firebase.messaging.FirebaseMessaging.getInstance().deleteToken(), 5, java.util.concurrent.TimeUnit.SECONDS
+            )
+        } catch (e: Exception) {
+            Log.e("$TAG Push token not deleted: $e")
+        }
         // the app's own settings too (Panel 2: flags and names stayed behind) – the PIN block state included
         for (name in listOf("securelink", "org.linphone.ui.main.MainActivity")) {
             context.getSharedPreferences(name, Context.MODE_PRIVATE).edit(commit = true) { clear() }
