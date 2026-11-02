@@ -673,6 +673,9 @@ class CoreContext
             Log.i(
                 "$TAG New account configured: [${account.params.identityAddress?.asStringUriOnly()}]"
             )
+            // SecureLink: an account added while running ("Add account", a new profile) is end-to-end only at once,
+            // not from the next start – no clear-text conversation in between (as iOS)
+            SecureLinkAdmin.enforceEncryptedMessaging(core)
             if (!account.params.isPushNotificationAvailable) {
                 if (!corePreferences.keepServiceAlive) {
                     Log.w(
