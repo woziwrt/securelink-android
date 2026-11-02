@@ -1045,7 +1045,7 @@
     <string name="securelink_pin_row_on">Zapnuto – appku otevírá váš PIN (nouzový PIN vše smaže)</string>
     <string name="securelink_pin_row_off">Vypnuto – appku otevírá zámek telefonu</string>
     <string name="securelink_pin_setup_title">Zámek PINem SecureLink</string>
-    <string name="securelink_pin_setup_text">Appku pak místo zámku telefonu otevře váš PIN (4–8 číslic).\n\nNastavíte i NOUZOVÝ PIN. Když vás někdo donutí appku otevřít, zadejte nouzový PIN: appka tiše smaže všechny účty, zprávy a kontakty a ukáže se prázdná, jako po instalaci.\n\nNouzový PIN si zapamatujte a nikomu ho neříkejte.</string>
+    <string name="securelink_pin_setup_text">Appku pak místo zámku telefonu otevře váš PIN (4–8 číslic).\n\nNastavíte i NOUZOVÝ PIN. Když vás někdo donutí appku otevřít, zadejte nouzový PIN: appka smaže všechny účty, zprávy a kontakty a ukáže se prázdná. Nezakryje ale, že byla nainstalovaná a používaná.\n\nNouzový PIN si zapamatujte a nikomu ho neříkejte.</string>
     <string name="securelink_pin_setup_start">Nastavit PIN</string>
     <string name="securelink_pin_new">Nový PIN (4–8 číslic)</string>
     <string name="securelink_pin_new_again">PIN ještě jednou</string>

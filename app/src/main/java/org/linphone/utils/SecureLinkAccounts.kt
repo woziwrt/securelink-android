@@ -16,7 +16,6 @@ import java.util.UUID
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
-import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.core.Account
@@ -51,9 +50,10 @@ object SecureLinkAccounts {
     var refusedOtherCircles = false
         private set
 
-    /** Debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md). */
+    /** More circles on one phone – in every build since v2 (Petr 2. 11. 2026: Martin supports several customers from one
+     *  phone); each server decides with allow_other_circles. */
     val enabled: Boolean
-        get() = BuildConfig.DEBUG
+        get() = true
 
     /** Downloads the profile behind a sign-in link and adds (or, for the same server, replaces) its account. */
     fun addFromProvisioning(url: String, done: (Boolean) -> Unit) {

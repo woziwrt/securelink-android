@@ -1173,7 +1173,7 @@
     <string name="securelink_pin_row_on">On – your PIN opens the app (the emergency PIN erases everything)</string>
     <string name="securelink_pin_row_off">Off – the phone screen lock opens the app</string>
     <string name="securelink_pin_setup_title">SecureLink PIN lock</string>
-    <string name="securelink_pin_setup_text">Your PIN (4–8 digits) then opens the app instead of the phone screen lock.\n\nYou also set an EMERGENCY PIN. If someone forces you to open the app, enter the emergency PIN: the app quietly erases all accounts, messages and contacts and looks empty, as if just installed.\n\nRemember the emergency PIN and tell nobody.</string>
+    <string name="securelink_pin_setup_text">Your PIN (4–8 digits) then opens the app instead of the phone screen lock.\n\nYou also set an EMERGENCY PIN. If someone forces you to open the app, enter the emergency PIN: the app erases all accounts, messages and contacts and shows an empty app. It does not hide that the app was installed and used.\n\nRemember the emergency PIN and tell nobody.</string>
     <string name="securelink_pin_setup_start">Set the PIN</string>
     <string name="securelink_pin_new">New PIN (4–8 digits)</string>
     <string name="securelink_pin_new_again">The PIN once more</string>

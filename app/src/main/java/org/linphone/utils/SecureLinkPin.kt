@@ -124,6 +124,8 @@ object EmergencyWipe {
         } catch (e: Exception) {
             Log.e("$TAG Push token not deleted: $e")
         }
+        // delivered notifications too (Panel 3) – they stay in the notification shade otherwise
+        androidx.core.app.NotificationManagerCompat.from(context).cancelAll()
         // the app's own settings too (Panel 2: flags and names stayed behind) – the PIN block state included
         for (name in listOf("securelink", "org.linphone.ui.main.MainActivity")) {
             context.getSharedPreferences(name, Context.MODE_PRIVATE).edit(commit = true) { clear() }
