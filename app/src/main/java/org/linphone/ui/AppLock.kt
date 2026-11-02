@@ -59,8 +59,8 @@ object AppLock {
     var locked = active
         private set
 
-    private var wrongPins = 0
-    private var pinBlockedUntil = 0L
+    // kept across restarts (wall clock): closing and reopening the app used to clear the one-minute block (Panel 2, 2. 11. 2026)
+    private fun pinPrefs(context: Context) = context.getSharedPreferences("securelink", Context.MODE_PRIVATE)
 
     private var startedActivities = 0
     private var backgroundSince = 0L
@@ -367,10 +367,15 @@ object AppLock {
 
     /** The normal PIN opens the app, the emergency PIN erases everything and opens an empty app; returns an error text */
     private fun submitPin(activity: GenericActivity, pin: String): String {
-        if (SystemClock.elapsedRealtime() < pinBlockedUntil) return activity.getString(R.string.securelink_pin_wrong)
-        return when (SecureLinkPin.check(activity, pin)) {
+        val prefs = pinPrefs(activity)
+        val blocked = System.currentTimeMillis() < prefs.getLong("pin_blocked_until", 0L)
+        val result = SecureLinkPin.check(activity, pin)
+        // the emergency PIN works also while the pad is blocked (Panel 2: five wrong PINs used to disable it); the normal
+        // PIN does not, so the block still slows down guessing
+        if (blocked && result != SecureLinkPin.Result.EMERGENCY) return activity.getString(R.string.securelink_pin_wrong)
+        return when (result) {
             SecureLinkPin.Result.NORMAL -> {
-                wrongPins = 0
+                prefs.edit().putInt("pin_wrong", 0).apply()
                 unlock()
                 hide(activity)
                 ""
@@ -391,10 +396,11 @@ object AppLock {
                 ""
             }
             SecureLinkPin.Result.WRONG -> {
-                wrongPins++
-                if (wrongPins >= 5) {
-                    pinBlockedUntil = SystemClock.elapsedRealtime() + 60_000
-                    wrongPins = 0
+                val wrong = prefs.getInt("pin_wrong", 0) + 1
+                if (wrong >= 5) {
+                    prefs.edit().putInt("pin_wrong", 0).putLong("pin_blocked_until", System.currentTimeMillis() + 60_000).apply()
+                } else {
+                    prefs.edit().putInt("pin_wrong", wrong).apply()
                 }
                 activity.getString(R.string.securelink_pin_wrong)
             }

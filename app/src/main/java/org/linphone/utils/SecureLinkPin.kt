@@ -115,6 +115,10 @@ object EmergencyWipe {
         // (emulator 2. 11. 2026) – it goes as well and is created again from the defaults, as after installation. The
         // caller then restarts the process so that the running core cannot write it back with the old key
         context.filesDir.listFiles()?.forEach { if (it.name.startsWith(".linphonerc") && it.delete()) removed++ }
+        // the app's own settings too (Panel 2: flags and names stayed behind) – the PIN block state included
+        for (name in listOf("securelink", "org.linphone.ui.main.MainActivity")) {
+            context.getSharedPreferences(name, Context.MODE_PRIVATE).edit(commit = true) { clear() }
+        }
         Log.w("$TAG Done: accounts removed, $removed data files deleted, database key destroyed")
     }
 }

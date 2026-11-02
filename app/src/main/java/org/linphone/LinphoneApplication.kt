@@ -68,6 +68,15 @@ class LinphoneApplication : Application(), SingletonImageLoader.Factory {
         )
         wakeLock.acquire(20000L) // 20 seconds
 
+        // SecureLink: release builds log errors only (message level wrote the downloaded profile with the password, names
+        // and addresses into linphone*.log – Panel 2, 2. 11. 2026); the log files of earlier builds go once
+        if (!BuildConfig.DEBUG) {
+            val prefs = context.getSharedPreferences("securelink", Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("old_logs_removed", false)) {
+                context.filesDir.listFiles()?.forEach { if (it.name.matches(Regex("""linphone.*\.log"""))) it.delete() }
+                prefs.edit().putBoolean("old_logs_removed", true).apply()
+            }
+        }
         Factory.instance().setLogCollectionPath(context.filesDir.absolutePath)
         Factory.instance().enableLogCollection(LogCollectionState.Enabled)
         // For VFS
@@ -96,8 +105,8 @@ class LinphoneApplication : Application(), SingletonImageLoader.Factory {
 
         val appName = context.getString(R.string.app_name)
         Factory.instance().setLoggerDomain(appName)
-        Factory.instance().loggingService.setLogLevel(LogLevel.Message)
-        Factory.instance().enableLogcatLogs(corePreferences.printLogsInLogcat)
+        Factory.instance().loggingService.setLogLevel(if (BuildConfig.DEBUG) LogLevel.Message else LogLevel.Error)
+        Factory.instance().enableLogcatLogs(BuildConfig.DEBUG && corePreferences.printLogsInLogcat)
 
         Log.i("$TAG Report Core preferences initialized")
         Compatibility.setupAppStartupListener(context)
