@@ -78,7 +78,7 @@ object AppLock {
     }
 
     fun idleExpired(): Boolean {
-        return !locked && SystemClock.elapsedRealtime() - lastTouch >= IDLE_MS
+        return enabled && !locked && SystemClock.elapsedRealtime() - lastTouch >= IDLE_MS
     }
 
     fun lockNow() {
@@ -101,6 +101,7 @@ object AppLock {
     }
 
     fun show(activity: GenericActivity) {
+        if (!enabled) return
         val decor = activity.window.decorView as ViewGroup
         if (decor.findViewWithTag<View>(LOCK_VIEW_TAG) != null) return
         Log.i("$TAG Showing the lock screen")
