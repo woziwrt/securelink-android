@@ -26,7 +26,7 @@
     <string name="new_group_conversation_title">Nová skupinová konverzace</string>
     <string name="contact_dialog_increase_trust_level_message">Chystáte se volat na zařízení %2$s uživatele %1$s.\nPřejete si hovor opravdu zahájit?</string>
     <string name="call_audio_device_type_headset">Náhlavní souprava</string>
-    <string name="call_stats_zrtp_cipher_algo">Šifrovací algoritmus: %s</string>
+    <string name="call_stats_zrtp_cipher_algo">Šifra hlasu: %s</string>
     <string name="call_error_user_not_found_toast">Uživatel nebyl nalezen</string>
     <string name="conference_failed_to_add_participant_invalid_address_toast">Neplatná SIP adresa, nelze přidat do konference</string>
     <string name="dialog_install">Instalovat</string>
@@ -76,7 +76,7 @@
     <string name="meeting_schedule_add_more_participants_title">Klepnutím přidat další účastníky</string>
     <string name="call_zrtp_sas_validation_required">Je vyžadováno ověření</string>
     <string name="call_stats_fec_lost_packets_label">Ztracené pakety: %s</string>
-    <string name="call_stats_zrtp_sas_algo">SAS algoritmus: %s</string>
+    <string name="call_stats_zrtp_sas_algo">Bezpečnostní slovo: %s</string>
     <string name="conference_share_link_title">Sdílet pozvánku</string>
     <plurals name="conference_participants_list_title">
         <item quantity="one">Účastník (%s)</item>
@@ -672,12 +672,12 @@
     <string name="call_stats_fec_title">FEC</string>
     <string name="call_stats_fec_repaired_packets_label">Opravené pakety: %s</string>
     <string name="call_stats_fec_lost_bandwidth_label">Šířka pásma: %s</string>
-    <string name="call_stats_media_encryption_title">Šifrování médií</string>
-    <string name="call_stats_media_encryption">Šifrování médií: %s</string>
-    <string name="call_stats_media_encryption_zrtp_post_quantum">Post-kvantové ZRTP</string>
-    <string name="call_stats_zrtp_key_agreement_algo">Algoritmus pro dohodu o klíči: %s</string>
-    <string name="call_stats_zrtp_hash_algo">Hashovací algoritmus: %s</string>
-    <string name="call_stats_zrtp_auth_tag_algo">Autentizační algoritmus: %s</string>
+    <string name="call_stats_media_encryption_title">Šifrování hovoru</string>
+    <string name="call_stats_media_encryption">Šifrování hovoru: %s</string>
+    <string name="call_stats_media_encryption_zrtp_post_quantum">postkvantové ZRTP</string>
+    <string name="call_stats_zrtp_key_agreement_algo">Domluva klíče: %s</string>
+    <string name="call_stats_zrtp_hash_algo">Hash: %s</string>
+    <string name="call_stats_zrtp_auth_tag_algo">Ověření paketů: %s</string>
     <string name="call_history_deleted_toast">Historie byla smazána</string>
     <string name="call_can_be_trusted_toast">Zařízení ověřeno</string>
     <string name="call_transfer_in_progress_toast">Hovor se přepojuje</string>
@@ -1031,4 +1031,6 @@
     <string name="securelink_contact_security_word_verified">Ověřeno ✓</string>
     <string name="securelink_contact_security_word_unverified">Zatím neověřeno</string>
     <string name="securelink_group">Skupina</string>
+    <string name="securelink_enc_messages">Zprávy: %s</string>
+    <string name="securelink_enc_pq">postkvantové</string>
 </resources>

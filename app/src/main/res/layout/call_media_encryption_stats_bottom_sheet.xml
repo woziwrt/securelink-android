@@ -128,6 +128,19 @@
                 android:gravity="center"
                 android:visibility="@{model.isMediaEncryptionZrtp ? View.VISIBLE : View.GONE}" />
 
+            <!-- SecureLink: messages with this person (LIME), as iOS -->
+            <androidx.appcompat.widget.AppCompatTextView
+                style="@style/default_text_style"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="10dp"
+                android:text="@{model.messagesEncryption}"
+                android:textColor="@color/bc_white"
+                android:gravity="center"
+                android:visibility="@{model.messagesEncryption.length() > 0 ? View.VISIBLE : View.GONE}" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 style="@style/primary_button_label_style"
                 android:onClick="@{() -> model.showSasValidationDialog()}"

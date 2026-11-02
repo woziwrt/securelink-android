@@ -838,14 +838,14 @@
     <string name="call_stats_fec_repaired_packets_label">Repaired packets: %s</string>
     <string name="call_stats_fec_lost_bandwidth_label">Bandwidth: %s</string>
 
-    <string name="call_stats_media_encryption_title">Media encryption</string>
-    <string name="call_stats_media_encryption">Media encryption: %s</string>
-    <string name="call_stats_media_encryption_zrtp_post_quantum">Post Quantum ZRTP</string>
-    <string name="call_stats_zrtp_cipher_algo">Cipher algorithm: %s</string>
-    <string name="call_stats_zrtp_key_agreement_algo">Key agreement algorithm: %s</string>
-    <string name="call_stats_zrtp_hash_algo">Hash algorithm: %s</string>
-    <string name="call_stats_zrtp_auth_tag_algo">Authentication algorithm: %s</string>
-    <string name="call_stats_zrtp_sas_algo">SAS algorithm: %s</string>
+    <string name="call_stats_media_encryption_title">Call encryption</string>
+    <string name="call_stats_media_encryption">Call encryption: %s</string>
+    <string name="call_stats_media_encryption_zrtp_post_quantum">post-quantum ZRTP</string>
+    <string name="call_stats_zrtp_cipher_algo">Voice cipher: %s</string>
+    <string name="call_stats_zrtp_key_agreement_algo">Key agreement: %s</string>
+    <string name="call_stats_zrtp_hash_algo">Hash: %s</string>
+    <string name="call_stats_zrtp_auth_tag_algo">Packet authentication: %s</string>
+    <string name="call_stats_zrtp_sas_algo">Security word: %s</string>
 
     <string name="call_history_deleted_toast">History has been deleted</string>
     <string name="call_can_be_trusted_toast">Device validated</string>
@@ -1159,4 +1159,6 @@
     <string name="securelink_contact_security_word_verified">Verified ✓</string>
     <string name="securelink_contact_security_word_unverified">Not verified yet</string>
     <string name="securelink_group">Group</string>
+    <string name="securelink_enc_messages">Messages: %s</string>
+    <string name="securelink_enc_pq">post-quantum</string>
 </resources>

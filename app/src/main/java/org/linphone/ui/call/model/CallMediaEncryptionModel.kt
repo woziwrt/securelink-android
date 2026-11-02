@@ -41,9 +41,13 @@ class CallMediaEncryptionModel
     val zrtpAuthTag = MutableLiveData<String>()
     val zrtpAuthSas = MutableLiveData<String>()
 
+    // SecureLink: what protects the messages with this person (LIME algorithm of the account), as iOS
+    val messagesEncryption = MutableLiveData<String>()
+
     @WorkerThread
     fun update(call: Call) {
         isMediaEncryptionZrtp.postValue(false)
+        messagesEncryption.postValue(messagesLine(call.params.account ?: call.core.defaultAccount))
 
         val stats = call.getStats(StreamType.Audio)
         if (stats != null) {
@@ -108,6 +112,20 @@ class CallMediaEncryptionModel
                 )
             }
         }
+    }
+
+    @WorkerThread
+    private fun messagesLine(account: org.linphone.core.Account?): String {
+        val algo = account?.params?.limeAlgo.orEmpty().split(",").firstOrNull().orEmpty()
+        val pq = AppUtils.getString(R.string.securelink_enc_pq)
+        val name = when (algo) {
+            "c448mlk1024" -> "X448 + ML-KEM-1024 ($pq)"
+            "c25519mlk512" -> "X25519 + ML-KEM-512 ($pq)"
+            "c25519k512" -> "X25519 + Kyber-512 ($pq)"
+            "" -> return ""
+            else -> algo
+        }
+        return AppUtils.getFormattedString(R.string.securelink_enc_messages, name)
     }
 
     fun showSasValidationDialog() {
