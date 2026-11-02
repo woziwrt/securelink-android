@@ -1070,6 +1070,8 @@ class MainActivity : GenericActivity() {
                     if (added) coreContext.provisioningAppliedEvent.postValue(Event(true))
                     val toast = if (added) {
                         Pair(R.string.remote_provisioning_config_applied_toast, R.drawable.smiley)
+                    } else if (SecureLinkAccounts.refusedOtherCircles) {
+                        Pair(R.string.securelink_circles_not_allowed, R.drawable.warning_circle)
                     } else {
                         Pair(R.string.remote_provisioning_config_failed_toast, R.drawable.warning_circle)
                     }

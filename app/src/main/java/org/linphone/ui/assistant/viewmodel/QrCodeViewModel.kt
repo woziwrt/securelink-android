@@ -115,6 +115,8 @@ class QrCodeViewModel
                             coreContext.provisioningAppliedEvent.postValue(Event(true))
                             showGreenToast(R.string.remote_provisioning_config_applied_toast, R.drawable.smiley)
                             remoteProvisioningSuccessfulEvent.postValue(Event(true))
+                        } else if (SecureLinkAccounts.refusedOtherCircles) {
+                            showRedToast(R.string.securelink_circles_not_allowed, R.drawable.warning_circle)
                         } else {
                             showRedToast(R.string.remote_provisioning_config_failed_toast, R.drawable.warning_circle)
                         }

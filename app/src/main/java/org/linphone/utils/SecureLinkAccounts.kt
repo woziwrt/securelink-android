@@ -42,8 +42,13 @@ object SecureLinkAccounts {
     private const val PARAM_PREFIX = "sl_"
     private val KEYS = listOf(
         "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url",
-        "my_name"
+        "my_name", "allow_other_circles"
     )
+
+    /** The last sign-in link was refused because a circle does not allow other circles on the phone (for the message). */
+    @Volatile
+    var refusedOtherCircles = false
+        private set
 
     /** Debug builds only until the whole feature is done (navrhy/DVA-SERVERY-JEDEN-TELEFON.md). */
     val enabled: Boolean
@@ -51,6 +56,7 @@ object SecureLinkAccounts {
 
     /** Downloads the profile behind a sign-in link and adds (or, for the same server, replaces) its account. */
     fun addFromProvisioning(url: String, done: (Boolean) -> Unit) {
+        refusedOtherCircles = false
         Thread {
             val xml = try {
                 download(url)
@@ -190,6 +196,22 @@ object SecureLinkAccounts {
             return false
         }
         val domain = identity.domain.orEmpty()
+
+        // SecureLink: each circle's administrator decides whether its phones may also hold other circles
+        // (allow_other_circles, Petr 2. 11. 2026). Another circle is refused when this phone already has one and either
+        // the new circle or one already here forbids it. A missing value (older servers) allows it. As iOS.
+        val others = core.accountList.filter { it.params.identityAddress?.domain != domain }
+        if (others.isNotEmpty()) {
+            core.accountList.forEach { adoptPhoneWideValues(core, it) }
+            val newAllows = profile.getString(SECTION, "allow_other_circles", "1") != "0"
+            val forbidding = others.firstOrNull { setting(it, "allow_other_circles") == "0" }
+            if (!newAllows || forbidding != null) {
+                val who = forbidding?.let { setting(it, "org_name") } ?: profile.getString(SECTION, "org_name", domain)
+                Log.w("$TAG Another circle refused: [$who] does not allow other circles on the phone")
+                refusedOtherCircles = true
+                return false
+            }
+        }
 
         // the same server again (a new invitation): the same person gets the new password in place (removed and added
         // again, the old account's unregister cleared the binding the new one had just made – the phone stayed offline);

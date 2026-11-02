@@ -1161,4 +1161,5 @@
     <string name="securelink_group">Group</string>
     <string name="securelink_enc_messages">Messages: %s</string>
     <string name="securelink_enc_pq">post-quantum</string>
+    <string name="securelink_circles_not_allowed">Another circle cannot be added on this phone – a circle\'s administrator does not allow it. Ask them.</string>
 </resources>
