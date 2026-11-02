@@ -43,7 +43,11 @@ object AppLock {
     private const val GRACE_MS = 30_000L
     const val IDLE_MS = 300_000L
 
-    var locked = true
+    // SecureLink: debug builds (installed by cable for testing) never lock – release builds always do; BuildConfig.DEBUG
+    // is false in every build that leaves the Mac, so this cannot be forgotten (Petr 2. 11. 2026)
+    private val enabled = !org.linphone.BuildConfig.DEBUG
+
+    var locked = enabled
         private set
 
     private var startedActivities = 0
@@ -54,7 +58,7 @@ object AppLock {
     fun activityStarted() {
         if (startedActivities == 0 && backgroundSince > 0L) {
             val away = SystemClock.elapsedRealtime() - backgroundSince
-            if (away >= GRACE_MS) locked = true
+            if (away >= GRACE_MS && enabled) locked = true
             Log.i("$TAG Back in the foreground after [${away / 1000}] s, locked=$locked")
             backgroundSince = 0L
         }
@@ -78,6 +82,7 @@ object AppLock {
     }
 
     fun lockNow() {
+        if (!enabled) return
         Log.i("$TAG No touch for [${IDLE_MS / 1000}] s – locking")
         locked = true
     }
