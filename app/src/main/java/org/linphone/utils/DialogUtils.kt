@@ -184,7 +184,8 @@ class DialogUtils {
             viewModel: ConfirmationDialogModel,
             title: String,
             message: String,
-            confirm: String
+            confirm: String,
+            showCancel: Boolean = true // SecureLink: a notice of something already done has only "I understand"
         ): Dialog {
             val binding: DialogRemoveAccountBinding = DataBindingUtil.inflate(
                 LayoutInflater.from(context),
@@ -197,6 +198,7 @@ class DialogUtils {
             binding.message.text = message
             binding.message.visibility = View.VISIBLE
             binding.confirm.text = confirm
+            if (!showCancel) binding.cancel.visibility = View.GONE
 
             return getDialog(context, binding)
         }

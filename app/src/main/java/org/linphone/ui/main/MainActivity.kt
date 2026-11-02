@@ -380,7 +380,8 @@ class MainActivity : GenericActivity() {
                     model,
                     getString(R.string.securelink_wiped_title),
                     getString(R.string.securelink_wiped_message),
-                    getString(R.string.securelink_signed_out_ok)
+                    getString(R.string.securelink_signed_out_ok),
+                    showCancel = false
                 )
                 val close = {
                     dialog.dismiss()
@@ -407,7 +408,8 @@ class MainActivity : GenericActivity() {
                     model,
                     getString(R.string.securelink_signed_out_title),
                     getString(R.string.securelink_signed_out_message),
-                    getString(R.string.securelink_signed_out_ok)
+                    getString(R.string.securelink_signed_out_ok),
+                    showCancel = false
                 )
                 model.dismissEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
                 model.confirmEvent.observe(this) { e -> e.consume { dialog.dismiss() } }
