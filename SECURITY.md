@@ -42,3 +42,9 @@ Older versions get no fixes – please update.
 
 The list of components and their versions is in the iOS repository (`securelink/SBOM.md` in woziwrt/securelink-talk-ios); the Android app uses the same linphone-sdk 5.5.29 and Mbed TLS 3.6.7.
 The exact source of every released version is tagged in this repository.
+
+## How it is protected
+
+https://github.com/woziwrt/securelink-talk-ios/blob/securelink/securelink/SECURITY-DESIGN.md (Czech:
+SECURITY-DESIGN.cs.md next to it) describes the encryption, what the server can and cannot see, the protection on the
+phone and the limits – for both apps. The server installer: https://github.com/woziwrt/securelink-server
