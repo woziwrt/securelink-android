@@ -76,6 +76,12 @@ class LinphoneApplication : Application(), SingletonImageLoader.Factory {
         corePreferences = CorePreferences(context)
         corePreferences.copyAssetsFromPackage()
 
+        // SecureLink: a new installation keeps its databases encrypted (AES-256-GCM, key in the Android Keystore); the
+        // emergency PIN destroys the key (Petr 2. 11. 2026). Only before the first database exists: turning it on over an
+        // existing installation lost the LIME database on the emulator (2. 11.) – existing installations stay as they are
+        if (!VFS.isEnabled(context) && !java.io.File(context.filesDir, "linphone.db").exists()) {
+            VFS.enable(context)
+        }
         if (VFS.isEnabled(context)) {
             VFS.setup(context)
         }

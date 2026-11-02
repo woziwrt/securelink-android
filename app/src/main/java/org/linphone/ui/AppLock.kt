@@ -380,14 +380,13 @@ object AppLock {
                 val ctx = activity.applicationContext
                 coreContext.postOnCoreThread { core ->
                     EmergencyWipe.run(core, ctx)
-                    coreContext.postOnMainThread {
-                        unlock()
-                        hide(activity)
-                        activity.startActivity(
-                            Intent(activity, org.linphone.ui.assistant.AssistantActivity::class.java)
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                        )
+                    // a new process, as after installation: the running core still holds the old configuration and
+                    // database key and would write them back – the app comes up empty, without accounts
+                    val restart = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+                    if (restart != null) {
+                        ctx.startActivity(Intent.makeRestartActivityTask(restart.component))
                     }
+                    Runtime.getRuntime().exit(0)
                 }
                 ""
             }

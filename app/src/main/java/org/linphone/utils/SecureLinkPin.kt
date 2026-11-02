@@ -86,8 +86,8 @@ object SecureLinkPin {
 
 /**
  * Emergency PIN: every account goes with its data (conversations, calls, directory, LIME identity), then the app's data
- * files (databases, logs, cache, downloads) are deleted and the PIN switched off – the app looks freshly installed.
- * What stays: the configuration file without accounts, the resources the SDK unpacks (share/) and our CA.
+ * files (databases, logs, cache, downloads, the user configuration) are deleted, the database key destroyed and the PIN
+ * switched off – the app looks freshly installed. What stays: the resources the SDK unpacks (share/) and our CA.
  */
 object EmergencyWipe {
     private const val TAG = "[Emergency Wipe]"
@@ -109,7 +109,13 @@ object EmergencyWipe {
         for (section in listOf("securelink_account", SecureLinkAccounts.NAMES_SECTION, "app")) core.config.cleanSection(section)
         core.config.sync()
         SecureLinkPin.disable(context)
-        Log.w("$TAG Done: accounts removed, $removed data files deleted")
+        // what may be left of the (encrypted) databases on the flash memory becomes unreadable
+        org.linphone.core.VFS.destroyKey(context)
+        // the user configuration is encrypted with that key too: without it the next start cannot read it and crashes
+        // (emulator 2. 11. 2026) – it goes as well and is created again from the defaults, as after installation. The
+        // caller then restarts the process so that the running core cannot write it back with the old key
+        context.filesDir.listFiles()?.forEach { if (it.name.startsWith(".linphonerc") && it.delete()) removed++ }
+        Log.w("$TAG Done: accounts removed, $removed data files deleted, database key destroyed")
     }
 }
 

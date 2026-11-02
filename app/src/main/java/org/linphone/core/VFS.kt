@@ -84,6 +84,22 @@ class VFS {
             return true
         }
 
+        /**
+         * SecureLink emergency PIN (2. 11. 2026): the key the databases are encrypted with is destroyed, so whatever of
+         * them is left on the flash memory cannot be read any more. A new key is made at the next start.
+         */
+        fun destroyKey(context: Context) {
+            try {
+                val ks = KeyStore.getInstance(ANDROID_KEY_STORE)
+                ks.load(null)
+                if (ks.containsAlias(ALIAS)) ks.deleteEntry(ALIAS)
+                getEncryptedSharedPreferences(context)?.edit(commit = true) { remove(VFS_IV); remove(VFS_KEY) }
+                Log.w("$TAG Encryption key destroyed")
+            } catch (e: Exception) {
+                Log.e("$TAG Failed to destroy the encryption key: $e")
+            }
+        }
+
         fun setup(context: Context) {
             // Use Android logger as our isn't ready yet
             try {
