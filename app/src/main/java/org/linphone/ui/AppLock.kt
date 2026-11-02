@@ -234,7 +234,7 @@ object AppLock {
             setPadding(dp(30), 0, dp(30), 0)
         }
         column.addView(
-            ImageView(activity).apply { setImageResource(R.mipmap.ic_launcher_round) },
+            ImageView(activity).apply { setImageResource(R.drawable.securelink_white) }, // white logo, as iOS
             LinearLayout.LayoutParams(dp(90), dp(90))
         )
         column.addView(
