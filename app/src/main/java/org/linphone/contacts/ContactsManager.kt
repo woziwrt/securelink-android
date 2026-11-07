@@ -657,6 +657,7 @@ class ContactsManager
             SecureLinkAccounts.refreshDirectories(core)
             return
         }
+        SecureLinkAccounts.removeOrphanDirectories(core) // A2: a moved server's or signed-out circle's old directory
         for (list in core.friendsLists) {
             if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
                 Log.i("$TAG SecureLink: refreshing the server directory [${list.displayName}]")

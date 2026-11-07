@@ -338,9 +338,38 @@ object SecureLinkAccounts {
         Log.i("$TAG The account [${account.params.identityAddress?.asStringUriOnly()}] keeps its server values itself")
     }
 
+    /**
+     * A server directory that belongs to no account any more goes, with its people (A2, 7. 11. 2026): the server moved
+     * (a new invitation brought another dir_url – the old list kept the old people under the old company name) or a
+     * circle was signed out another way than "Sign out". Only directory lists (vCard 4) with an address are touched,
+     * and nothing at all when no account names a directory (then nobody can tell which list is whose).
+     */
+    @WorkerThread
+    fun removeOrphanDirectories(core: Core) {
+        val wanted = core.accountList.map { setting(it, "dir_url") }.toMutableSet()
+        wanted.add(core.config.getString("misc", "contacts-vcard-list", "").orEmpty())
+        wanted.remove("")
+        if (wanted.isEmpty()) return
+        val orphans = core.friendsLists.filter {
+            it.type == FriendList.Type.VCard4 && !it.uri.isNullOrEmpty() && it.uri !in wanted
+        }
+        if (orphans.isEmpty()) return
+        val kept = core.friendsLists.filter { it !in orphans }
+            .flatMap { list -> list.friends.mapNotNull { it.address?.username } }.toSet()
+        for (list in orphans) {
+            Log.w("$TAG Directory [${list.displayName}] [${list.uri}] belongs to no account any more, removing it")
+            for (friend in list.friends) { // the remembered names of its people go too, unless another circle has them
+                friend.address?.username?.takeIf { it !in kept }?.let { core.config.cleanEntry(NAMES_SECTION, it) }
+            }
+            core.removeFriendList(list)
+        }
+        coreContext.contactsManager.notifyContactsListChanged()
+    }
+
     /** Downloads every server's directory with that account's own login and puts it into the account's contact list. */
     @WorkerThread
     fun refreshDirectories(core: Core) {
+        removeOrphanDirectories(core)
         for (account in core.accountList) {
             val url = setting(account, "dir_url")
             val auth = account.findAuthInfo()
