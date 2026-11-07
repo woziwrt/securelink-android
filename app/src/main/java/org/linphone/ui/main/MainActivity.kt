@@ -601,6 +601,7 @@ class MainActivity : GenericActivity() {
 
     private fun offerNewVersion() {
         if (updateDialogShown) return
+        if (installedFromGooglePlay()) return // B4: Google Play updates its own installations
         val mine = getString(R.string.linphone_app_version)
         coreContext.postOnCoreThread { core ->
             if (core.accountList.isEmpty()) return@postOnCoreThread
@@ -616,6 +617,23 @@ class MainActivity : GenericActivity() {
                 }
             }
         }
+    }
+
+    // SecureLink: a phone with SecureLink from Google Play was offered the server's APK too (B4, 7. 11. 2026) – its
+    // updates come from Play, the server's offer is for phones that installed the APK from the server
+    private fun installedFromGooglePlay(): Boolean {
+        val installer = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                packageManager.getInstallSourceInfo(packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getInstallerPackageName(packageName)
+            }
+        } catch (e: Exception) {
+            Log.w("$TAG Install source unknown: $e")
+            null
+        }
+        return installer == "com.android.vending"
     }
 
     private fun showNewVersion(update: SecureLinkAdmin.AppUpdate) {
