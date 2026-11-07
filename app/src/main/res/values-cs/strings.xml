@@ -1027,6 +1027,8 @@
     <string name="securelink_terms">Podmínky používání</string>
     <string name="securelink_privacy_policy">Zásady ochrany osobních údajů</string>
     <string name="securelink_write_to_support">Napsat podpoře</string>
+    <string name="securelink_emergency_title">Ztratíte telefon?</string>
+    <string name="securelink_emergency_call">Volejte správci: %1$s</string>
     <string name="help_about_open_source_licenses_title">Licence</string>
     <string name="help_about_open_source_licenses_subtitle">SecureLink © 2026 Petr Wozniak, šířeno pod licencí GNU GPL v3. S využitím Linphone © Belledonne Communications (GPL v3). Zdrojový kód: github.com/woziwrt/securelink-android</string>
     <string name="securelink_terms_title">Podmínky používání</string>

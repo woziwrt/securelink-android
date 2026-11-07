@@ -116,6 +116,28 @@ class HelpFragment : GenericMainFragment() {
             }
         }
 
+        // SecureLink B6: call (or write to) the administrator of the circle when the phone is lost
+        binding.setEmergencyClickListener {
+            val links = viewModel.emergencyLinks
+            val open = { link: String ->
+                try {
+                    val action = if (link.startsWith("tel:")) Intent.ACTION_DIAL else Intent.ACTION_SENDTO
+                    startActivity(Intent(action, link.toUri()))
+                } catch (e: Exception) {
+                    Log.e("$TAG No app for [$link]: $e")
+                }
+            }
+            if (links.size <= 1) {
+                links.firstOrNull()?.let { open(it.second) }
+            } else {
+                AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.securelink_pick_circle)
+                    .setItems(links.map { it.first }.toTypedArray()) { _, which -> open(links[which].second) }
+                    .setNegativeButton(R.string.dialog_cancel, null)
+                    .show()
+            }
+        }
+
         // SecureLink: connection check – lines with ✓ / ✗ the user can copy and send to the administrator
         binding.setConnectionCheckClickListener {
             (requireActivity() as GenericActivity).showGreenToast(getString(R.string.securelink_check_running), R.drawable.info)

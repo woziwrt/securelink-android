@@ -70,6 +70,14 @@ class HelpViewModel
 
     val supportEmail = MutableLiveData<String>()
 
+    // SecureLink B6: the administrator to call when the phone is lost – from the server profile (emergency_*),
+    // one line per circle; empty when no circle has one
+    val emergencyContact = MutableLiveData<String>()
+
+    // (circle, "tel:…" or "mailto:…") for a tap on the emergency contact
+    @Volatile
+    var emergencyLinks: List<Pair<String, String>> = emptyList()
+
     // SecureLink: with two servers (circles) each has its own terms, privacy policy and support – key → (circle, value),
     // one entry per different value; a tap then asks which circle when there is more than one
     @Volatile
@@ -222,6 +230,25 @@ class HelpViewModel
             privacyUrl.postValue(shown("privacy_url"))
             termsUrl.postValue(shown("terms_url"))
             supportEmail.postValue(shown("support_email"))
+
+            val emergency = core.accountList.mapNotNull { account ->
+                val circle = SecureLinkAccounts.setting(account, "org_name").ifEmpty { account.params.domain.orEmpty() }
+                val name = SecureLinkAdmin.setting(core, "emergency_name", account)
+                val phone = SecureLinkAdmin.setting(core, "emergency_phone", account)
+                val email = SecureLinkAdmin.setting(core, "emergency_email", account)
+                if (phone.isEmpty() && email.isEmpty()) return@mapNotNull null
+                val who = listOf(name, phone, email).filter { it.isNotEmpty() }.joinToString(", ")
+                val link = if (phone.isNotEmpty()) "tel:" + phone.filter { it.isDigit() || it == '+' } else "mailto:$email"
+                Triple(circle, who, link)
+            }.distinctBy { it.second }
+            emergencyLinks = emergency.map { it.first to it.third }
+            emergencyContact.postValue(
+                if (emergency.size > 1) {
+                    emergency.joinToString("\n", prefix = "\n") { "${it.first}: ${it.second}" }
+                } else {
+                    emergency.firstOrNull()?.second.orEmpty()
+                }
+            )
         }
     }
 

@@ -40,9 +40,15 @@ object SecureLinkAccounts {
     private const val SECTION = "securelink_account"
     const val NAMES_SECTION = "securelink_names"
     private const val PARAM_PREFIX = "sl_"
+
+    // the server values a profile also has in its phone-wide [app] section
+    private val PHONE_WIDE_KEYS = listOf(
+        "admin_uri", "support_email", "privacy_url", "terms_url", "request_url",
+        "emergency_name", "emergency_phone", "emergency_email"
+    )
     private val KEYS = listOf(
         "domain", "org_name", "dir_url", "upload_url", "admin_uri", "support_email", "privacy_url", "terms_url", "request_url",
-        "my_name", "allow_other_circles"
+        "my_name", "allow_other_circles", "emergency_name", "emergency_phone", "emergency_email"
     )
 
     /** The last sign-in link was refused because a circle does not allow other circles on the phone (for the message). */
@@ -327,7 +333,7 @@ object SecureLinkAccounts {
             params.addCustomParam(PARAM_PREFIX + "org_name", domain)
             params.addCustomParam(PARAM_PREFIX + "dir_url", config.getString("misc", "contacts-vcard-list", "").orEmpty())
             params.addCustomParam(PARAM_PREFIX + "upload_url", core.fileTransferServer.orEmpty())
-            for (key in listOf("admin_uri", "support_email", "privacy_url", "terms_url", "request_url")) {
+            for (key in PHONE_WIDE_KEYS) {
                 params.addCustomParam(PARAM_PREFIX + key, config.getString("app", key, "").orEmpty())
             }
         }
@@ -476,7 +482,7 @@ object SecureLinkAccounts {
         params.addCustomParam(PARAM_PREFIX + "org_name", domain)
         params.addCustomParam(PARAM_PREFIX + "dir_url", profile.getString("misc", "contacts-vcard-list", "").orEmpty())
         params.addCustomParam(PARAM_PREFIX + "upload_url", profile.getString("misc", "file_transfer_server_url", "").orEmpty())
-        for (key in listOf("admin_uri", "support_email", "privacy_url", "terms_url", "request_url")) {
+        for (key in PHONE_WIDE_KEYS) {
             params.addCustomParam(PARAM_PREFIX + key, profile.getString("app", key, "").orEmpty())
         }
     }
