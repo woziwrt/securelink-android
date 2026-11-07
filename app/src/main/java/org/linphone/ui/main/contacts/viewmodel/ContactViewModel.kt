@@ -323,14 +323,35 @@ class ContactViewModel
         }
     }
 
+    // SecureLink (7. 11. 2026): after a call where both sides confirmed the security word the card still said "not
+    // verified yet" – it was read only when the card was first filled, and only for the address exactly as the
+    // directory writes it. Now read again whenever the card comes back (after the call) and for every address of the
+    // contact in the form ZRTP stores it (the call's remote address cleaned of parameters and display name).
+    @UiThread
+    fun refreshSecurityWord() {
+        coreContext.postOnCoreThread { core ->
+            if (::friend.isInitialized) refreshSecurityWord(core)
+        }
+    }
+
+    @WorkerThread
+    private fun refreshSecurityWord(core: Core) {
+        val verified = friend.addresses.any { address ->
+            val peer = address.clone()
+            peer.clean()
+            val cleaned = core.getZrtpStatus(peer.asStringUriOnly())
+            val asWritten = core.getZrtpStatus(address.asStringUriOnly())
+            Log.i("$TAG Security word of [${peer.asStringUriOnly()}]: $cleaned (as written in the directory: $asWritten)")
+            cleaned == ZrtpPeerStatus.Valid || asWritten == ZrtpPeerStatus.Valid
+        }
+        securityWordVerified.postValue(verified)
+    }
+
     @WorkerThread
     fun refreshContactInfo() {
         isFavourite.postValue(friend.starred)
         isBlocked.postValue(SecureLinkAdmin.isBlocked(coreContext.core, friend.address))
-        val address = friend.address
-        securityWordVerified.postValue(
-            address != null && coreContext.core.getZrtpStatus(address.asStringUriOnly()) == ZrtpPeerStatus.Valid
-        )
+        refreshSecurityWord(coreContext.core)
         // Do not show edit contact button for contacts not stored in a FriendList or
         // if they are in a temporary one (for example if they are from a remote directory such as LDAP or CardDAV)
         isStored.postValue(!coreContext.contactsManager.isContactTemporary(friend))

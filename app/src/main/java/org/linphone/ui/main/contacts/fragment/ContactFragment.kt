@@ -257,6 +257,11 @@ class ContactFragment : SlidingPaneChildFragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshSecurityWord() // SecureLink: confirmed in a call that has just ended
+    }
+
     override fun onPause() {
         super.onPause()
 
