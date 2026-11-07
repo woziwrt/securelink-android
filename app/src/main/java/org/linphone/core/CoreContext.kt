@@ -71,6 +71,9 @@ class CoreContext
         // SecureLink: a sign-out needs a second refusal from a later registration attempt
         private const val SIGN_IN_REFUSAL_GAP = 20_000L
         private const val SIGN_IN_REFUSAL_WINDOW = 30 * 60_000L
+
+        // SecureLink: an account the server refused asks /wipe at most this often (A3)
+        private const val WIPE_CHECK_GAP = 60_000L
     }
 
     lateinit var core: Core
@@ -123,6 +126,28 @@ class CoreContext
 
     // SecureLink: when the server first refused each identity's stored password – one refusal is not enough to sign out
     private val firstSignInRefusal = HashMap<String, Long>()
+
+    // SecureLink: when each identity last asked the server whether the phone is to be wiped
+    private val lastWipeCheck = HashMap<String, Long>()
+
+    /**
+     * SecureLink "block and wipe", faster (A3, 7. 11. 2026): a stolen phone was wiped only at the second refused
+     * sign-in (≥ 20 s, often ~2 min) and the counter lived in memory only. Ask /wipe already at the first refusal, when
+     * the server forbids the registration and, at start, for an account that was signed out by the administrator
+     * earlier – the server answers "wipe" only for an account its administrator asked to wipe, so asking is harmless.
+     */
+    @WorkerThread
+    private fun checkWipe(core: Core, account: Account, why: String) {
+        val identity = account.params.identityAddress?.let { "${it.username}@${it.domain}" } ?: return
+        val now = System.currentTimeMillis()
+        val last = lastWipeCheck[identity]
+        if (last != null && now - last < WIPE_CHECK_GAP) return
+        lastWipeCheck[identity] = now
+        Log.i("$TAG SecureLink: asking the server whether [$identity] is to be wiped ($why)")
+        SecureLinkAccounts.wipeIfAsked(core, account) { wiped ->
+            if (wiped) wipedByAdministratorEvent.postValue(Event(true))
+        }
+    }
 
     val clearAuthenticationRequestDialogEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData()
@@ -306,6 +331,9 @@ class CoreContext
                 SecureLinkAdmin.enforceEncryptedMessaging(core)
                 SecureLinkAdmin.enforceDisappearing(core)
                 SecureLinkAdmin.pruneCallHistory(core)
+                // SecureLink A3: an account signed out by the administrator does not register any more – ask now
+                // whether it has been switched to "wipe" since
+                core.accountList.filter { !it.params.isRegisterEnabled }.forEach { checkWipe(core, it, "signed out earlier") }
                 // SecureLink: with push (FCM) the phone is woken for calls and messages – no permanent foreground
                 // service and notification icon (it was switched on while the app had no push yet)
                 if (corePreferences.keepServiceAlive && core.accountList.any { it.params.isPushNotificationAvailable }) {
@@ -615,6 +643,7 @@ class CoreContext
                     if (first == null || now - first > SIGN_IN_REFUSAL_WINDOW) {
                         Log.w("$TAG SecureLink: sign-in of [$identity] refused once, trying again later before signing out")
                         firstSignInRefusal[identity] = now
+                        checkWipe(core, accountFound, "first refusal") // A3: a stolen phone goes at once
                         return
                     }
                     if (now - first < SIGN_IN_REFUSAL_GAP) {
@@ -655,6 +684,12 @@ class CoreContext
         ) {
             if (state == RegistrationState.Ok) {
                 account.params.identityAddress?.let { firstSignInRefusal.remove("${it.username}@${it.domain}") }
+            }
+            // SecureLink A3: a server that forbids the registration outright (no password challenge) – ask /wipe too
+            if (state == RegistrationState.Failed && account.params.isRegisterEnabled &&
+                (account.error == Reason.Forbidden || account.error == Reason.Unauthorized)
+            ) {
+                checkWipe(core, account, "registration ${account.error}")
             }
             // SecureLink: the push token arrives a moment after the account, so the account was added "without push"
             // and the keep-alive foreground service went on. Registered with push now – it is no longer needed.
