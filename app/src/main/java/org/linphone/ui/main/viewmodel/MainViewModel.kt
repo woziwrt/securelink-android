@@ -39,6 +39,7 @@ import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.GlobalState
 import org.linphone.core.MessageWaitingIndication
+import org.linphone.core.Reason
 import org.linphone.core.RegistrationState
 import org.linphone.core.VFS
 import org.linphone.core.tools.AndroidPlatformHelper
@@ -230,6 +231,13 @@ class MainViewModel
 
             when (state) {
                 RegistrationState.Failed -> {
+                    // SecureLink (B3): a refused sign-in is not a connection problem – the app asks the server what
+                    // happened and then says it in its own words (wiped / signed out); "Error connecting" first only
+                    // frightened the owner of a phone that was lost and found
+                    if (account.error == Reason.Unauthorized || account.error == Reason.Forbidden) {
+                        Log.w("$TAG Account sign-in refused [${account.error}], no connection error alert")
+                        return
+                    }
                     if (account == core.defaultAccount) {
                         Log.e("$TAG Default account registration failed!")
                         val label = AppUtils.getString(

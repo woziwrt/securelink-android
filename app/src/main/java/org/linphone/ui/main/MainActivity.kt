@@ -372,14 +372,22 @@ class MainActivity : GenericActivity() {
         }
 
         // SecureLink "block and wipe": the account and its data are already gone – say so; no account left → first screen
+        // (B3) one circle of several: say which one went and that the others keep working
         coreContext.wipedByAdministratorEvent.observe(this) {
-            it.consume {
+            it.consume { (circle, othersRemain) ->
                 val model = ConfirmationDialogModel()
                 val dialog = DialogUtils.getSecureLinkConfirmDialog(
                     this,
                     model,
-                    getString(R.string.securelink_wiped_title),
-                    getString(R.string.securelink_wiped_message),
+                    if (othersRemain) {
+                        getString(R.string.securelink_wiped_circle_title, circle)
+                    } else {
+                        getString(R.string.securelink_wiped_title)
+                    },
+                    getString(
+                        if (othersRemain) R.string.securelink_wiped_circle_message else R.string.securelink_wiped_message,
+                        circle
+                    ),
                     getString(R.string.securelink_signed_out_ok),
                     showCancel = false
                 )
@@ -401,13 +409,24 @@ class MainActivity : GenericActivity() {
         }
 
         coreContext.signedOutByAdministratorEvent.observe(this) {
-            it.consume {
+            it.consume { (circle, othersRemain) ->
                 val model = ConfirmationDialogModel()
                 val dialog = DialogUtils.getSecureLinkConfirmDialog(
                     this,
                     model,
-                    getString(R.string.securelink_signed_out_title),
-                    getString(R.string.securelink_signed_out_message),
+                    if (othersRemain) {
+                        getString(R.string.securelink_signed_out_circle_title, circle)
+                    } else {
+                        getString(R.string.securelink_signed_out_title)
+                    },
+                    getString(
+                        if (othersRemain) {
+                            R.string.securelink_signed_out_circle_message
+                        } else {
+                            R.string.securelink_signed_out_message
+                        },
+                        circle
+                    ),
                     getString(R.string.securelink_signed_out_ok),
                     showCancel = false
                 )

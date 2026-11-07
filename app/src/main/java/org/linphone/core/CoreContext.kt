@@ -115,13 +115,22 @@ class CoreContext
         MutableLiveData()
     }
 
-    // SecureLink: the server refused this phone's sign-in (new invitation or blocked) – told once, no password dialog
-    val wipedByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
-        MutableLiveData<Event<Boolean>>()
+    // SecureLink: the server refused this phone's sign-in (new invitation or blocked) – told once, no password dialog.
+    // (circle name, whether other circles stay on the phone): it is one circle, not the whole phone (B3, 5. 11. 2026)
+    val wipedByAdministratorEvent: MutableLiveData<Event<Pair<String, Boolean>>> by lazy {
+        MutableLiveData<Event<Pair<String, Boolean>>>()
     }
 
-    val signedOutByAdministratorEvent: MutableLiveData<Event<Boolean>> by lazy {
-        MutableLiveData<Event<Boolean>>()
+    val signedOutByAdministratorEvent: MutableLiveData<Event<Pair<String, Boolean>>> by lazy {
+        MutableLiveData<Event<Pair<String, Boolean>>>()
+    }
+
+    /** SecureLink: the circle [account] belongs to and whether another circle keeps working on this phone. */
+    @WorkerThread
+    private fun circleOf(core: Core, account: Account): Pair<String, Boolean> {
+        val name = SecureLinkAdmin.setting(core, "org_name", account)
+            .ifEmpty { account.params.identityAddress?.domain.orEmpty() }
+        return Pair(name, core.accountList.any { it != account && it.params.isRegisterEnabled })
     }
 
     // SecureLink: when the server first refused each identity's stored password – one refusal is not enough to sign out
@@ -144,8 +153,9 @@ class CoreContext
         if (last != null && now - last < WIPE_CHECK_GAP) return
         lastWipeCheck[identity] = now
         Log.i("$TAG SecureLink: asking the server whether [$identity] is to be wiped ($why)")
+        val circle = circleOf(core, account)
         SecureLinkAccounts.wipeIfAsked(core, account) { wiped ->
-            if (wiped) wipedByAdministratorEvent.postValue(Event(true))
+            if (wiped) wipedByAdministratorEvent.postValue(Event(circle))
         }
     }
 
@@ -657,11 +667,12 @@ class CoreContext
                         params.isRegisterEnabled = false
                         accountFound.params = params
                         // "block and wipe": only when the server says so for this very account (v2, 1. 11. 2026)
+                        val circle = circleOf(core, accountFound)
                         SecureLinkAccounts.wipeIfAsked(core, accountFound) { wiped ->
                             if (wiped) {
-                                wipedByAdministratorEvent.postValue(Event(true))
+                                wipedByAdministratorEvent.postValue(Event(circle))
                             } else {
-                                signedOutByAdministratorEvent.postValue(Event(true))
+                                signedOutByAdministratorEvent.postValue(Event(circle))
                             }
                         }
                     }
