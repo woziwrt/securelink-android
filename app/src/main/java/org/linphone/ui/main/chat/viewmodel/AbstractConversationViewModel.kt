@@ -144,7 +144,8 @@ abstract class AbstractConversationViewModel : GenericViewModel() {
     fun startCall() {
         coreContext.postOnCoreThread {
             if (LinphoneUtils.isChatRoomAGroup(chatRoom) && chatRoom.participants.size >= 2) {
-                confirmGroupCallEvent.postValue(Event(true))
+                // SecureLink (C1): no group calls in v1 – the button is hidden in groups, this only guards it
+                Log.w("$TAG Group calls are not available, ignoring")
             } else {
                 val firstParticipant = chatRoom.participants.firstOrNull()
                 val address = firstParticipant?.address

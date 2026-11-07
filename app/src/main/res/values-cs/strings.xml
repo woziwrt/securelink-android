@@ -472,7 +472,7 @@
     <string name="conversation_action_delete">Smazat konverzaci</string>
     <string name="conversation_action_leave_group">Opustit skupinu</string>
     <string name="conversation_ephemeral_messages_title">Mizející zprávy</string>
-    <string name="conversation_ephemeral_messages_subtitle">Nové zprávy budou automaticky smazány, jakmile je všichni přečtou.\nVyberte dobu trvání:</string>
+    <string name="conversation_ephemeral_messages_subtitle">Zprávy zmizí za zvolenou dobu po přečtení – výchozí je 7 dní.\nVyberte dobu:</string>
     <string name="conversation_ephemeral_messages_duration_disabled">Zakázáno</string>
     <string name="conversation_ephemeral_messages_duration_one_minute">1 minuta</string>
     <string name="conversation_ephemeral_messages_duration_one_hour">1 hodina</string>

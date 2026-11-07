@@ -555,7 +555,7 @@
     <string name="conversation_action_leave_group">Leave the group</string>
     <string name="conversation_action_configure_ephemeral_messages">Configure ephemeral messages</string>
     <string name="conversation_ephemeral_messages_title">Ephemeral messages</string>
-    <string name="conversation_ephemeral_messages_subtitle">New messages will be automatically deleted once read by everyone.\nChoose a duration:</string>
+    <string name="conversation_ephemeral_messages_subtitle">Messages disappear the chosen time after they are read – 7 days unless you choose otherwise.\nChoose a duration:</string>
     <string name="conversation_ephemeral_messages_duration_disabled">Disabled</string>
     <string name="conversation_ephemeral_messages_duration_one_minute">1 minute</string>
     <string name="conversation_ephemeral_messages_duration_one_hour">1 hour</string>

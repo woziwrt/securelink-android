@@ -222,7 +222,7 @@
                     android:layout_height="0dp"
                     android:src="@drawable/phone"
                     android:contentDescription="@string/content_description_call_start"
-                    android:visibility="@{viewModel.isCallConversation || viewModel.isReadOnly || viewModel.searchBarVisible ? View.GONE : View.VISIBLE}"
+                    android:visibility="@{viewModel.isCallConversation || viewModel.isReadOnly || viewModel.searchBarVisible || viewModel.isGroup ? View.GONE : View.VISIBLE}"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/show_menu"
                     app:layout_constraintBottom_toTopOf="@id/events_list"

@@ -276,7 +276,7 @@
                         android:padding="16dp"
                         android:src="@drawable/phone"
                         android:contentDescription="@string/content_description_call_start"
-                        android:visibility="@{viewModel.isReadOnly ? View.GONE : View.VISIBLE}"
+                        android:visibility="@{viewModel.isReadOnly || viewModel.isGroup ? View.GONE : View.VISIBLE}"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintStart_toEndOf="@id/mute"
                         app:layout_constraintEnd_toStartOf="@id/meeting"
@@ -296,13 +296,13 @@
                         android:maxLines="2"
                         android:ellipsize="end"
                         android:labelFor="@id/call"
-                        android:visibility="@{viewModel.isReadOnly ? View.GONE : View.VISIBLE}"
+                        android:visibility="@{viewModel.isReadOnly || viewModel.isGroup ? View.GONE : View.VISIBLE}"
                         app:layout_constraintStart_toStartOf="@id/call"
                         app:layout_constraintEnd_toEndOf="@id/call"
                         app:layout_constraintTop_toBottomOf="@id/call"
                         app:layout_constraintBottom_toBottomOf="parent" />
 
-                    <!-- SecureLink: no meetings (as iOS 7220de638) -->
+                    <!-- SecureLink: no meetings (as iOS 7220de638); no group calls either (C1) – the call button is for 1:1 only -->
                     <ImageView
                         android:id="@+id/meeting"
                         android:visibility="gone"
