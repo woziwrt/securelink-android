@@ -20,6 +20,7 @@ import org.linphone.R
 import org.linphone.core.Account
 import org.linphone.core.Address
 import org.linphone.core.ChatMessage
+import org.linphone.core.ChatMessageListenerStub
 import org.linphone.core.ChatRoom
 import org.linphone.core.ChatRoomListenerStub
 import org.linphone.core.Conference
@@ -143,7 +144,8 @@ object SecureLinkAdmin {
         onReady: (String) -> Unit,
         onError: () -> Unit,
         sendNow: Boolean = false,
-        account: Account? = core.defaultAccount // two servers: the administrator of the server it is about
+        account: Account? = core.defaultAccount, // two servers: the administrator of the server it is about
+        onLeft: (() -> Unit)? = null // sendNow: the message reached the server or failed for good
     ) {
         val uri = setting(core, "admin_uri", account)
         val admin = if (uri.isEmpty()) null else Factory.instance().createAddress(uri)
@@ -169,7 +171,20 @@ object SecureLinkAdmin {
         val ready = { room: ChatRoom ->
             val id = LinphoneUtils.getConversationId(room)
             if (sendNow) {
-                room.createMessageFromUtf8(draft).send()
+                val message = room.createMessageFromUtf8(draft)
+                if (onLeft != null) {
+                    message.addListener(object : ChatMessageListenerStub() {
+                        override fun onMsgStateChanged(message: ChatMessage, state: ChatMessage.State?) {
+                            if (state == ChatMessage.State.Delivered || state == ChatMessage.State.DeliveredToUser ||
+                                state == ChatMessage.State.Displayed || state == ChatMessage.State.NotDelivered
+                            ) {
+                                message.removeListener(this)
+                                onLeft()
+                            }
+                        }
+                    })
+                }
+                message.send()
                 Log.i("$TAG Message sent to the administrator")
             } else {
                 pendingDraft = Pair(id, draft)

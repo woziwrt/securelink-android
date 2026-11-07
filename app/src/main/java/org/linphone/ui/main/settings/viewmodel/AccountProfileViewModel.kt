@@ -104,9 +104,15 @@ class AccountProfileViewModel
     // SecureLink: "Request account deletion" – empty until asked, then the date it was asked (as iOS)
     val deletionRequestedOn = MutableLiveData<String>()
 
-    val deletionRequestedEvent: MutableLiveData<Event<Boolean>> by lazy {
+    // (sent, what to tell the person): once sent, the circle is signed out from this phone (B7)
+    val deletionRequestedEvent: MutableLiveData<Event<Pair<Boolean, String>>> by lazy {
         MutableLiveData()
     }
+
+    // SecureLink B7: the sign-out after a deletion request waits for the notice to the administrator to leave
+    private var deletionNoticeLeft = false
+    private var deletionSignOutWanted = false
+    private var deletionSignedOut = false
 
     private lateinit var account: Account
 
@@ -285,45 +291,48 @@ class AccountProfileViewModel
 
     @UiThread
     fun deleteAccount() {
-        coreContext.postOnCoreThread { core ->
-            if (::account.isInitialized) {
-                val identity = account.params.identityAddress?.asStringUriOnly()
-                Log.w("$TAG Removing account [$identity] and all related data (auth info, conferences, conversations, call logs)")
-                val wasLastAccount = core.accountList.size <= 1 // the removal may complete later (unregister first)
-                val directory = SecureLinkAccounts.setting(account, "dir_url")
-                core.removeAccountWithData(account)
-                if (!wasLastAccount && directory.isNotEmpty()) {
-                    // SecureLink, two servers: signing out of one company takes its people along, the other stays
-                    core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
-                    coreContext.contactsManager.notifyContactsListChanged()
-                }
-                if (wasLastAccount) {
-                    // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
-                    // directory people may survive – a new QR must not list the previous account's contacts.
-                    // The credentials go only once the unregister is done: removed at once, the unregister got no
-                    // answer to the server's challenge and the server kept the phone as signed in (as iOS c2abdd7c8).
-                    clearAuthInfoAfterUnregister(core)
-                    SecureLinkAdmin.scheduleZrtpCacheWipe(core)
-                    core.config.cleanEntry("misc", "contacts-vcard-list")
-                    core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
-                    core.config.sync()
-                    for (list in core.friendsLists) {
-                        if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
-                            core.removeFriendList(list)
-                        } else {
-                            for (friend in list.friends) list.removeFriend(friend)
-                        }
-                    }
-                    coreContext.contactsManager.notifyContactsListChanged()
-                }
-                accountRemovedEvent.postValue(Event(true))
+        coreContext.postOnCoreThread { core -> removeAccount(core) }
+    }
 
-                if (core.accountList.isEmpty()) {
-                    Log.w("$TAG No more account found in Core")
-                    if (!core.provisioningUri.isNullOrEmpty()) {
-                        Log.w("$TAG Removing remote provisioning URI")
-                        core.provisioningUri = null
+    @WorkerThread
+    private fun removeAccount(core: Core) {
+        if (::account.isInitialized) {
+            val identity = account.params.identityAddress?.asStringUriOnly()
+            Log.w("$TAG Removing account [$identity] and all related data (auth info, conferences, conversations, call logs)")
+            val wasLastAccount = core.accountList.size <= 1 // the removal may complete later (unregister first)
+            val directory = SecureLinkAccounts.setting(account, "dir_url")
+            core.removeAccountWithData(account)
+            if (!wasLastAccount && directory.isNotEmpty()) {
+                // SecureLink, two servers: signing out of one company takes its people along, the other stays
+                core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
+                coreContext.contactsManager.notifyContactsListChanged()
+            }
+            if (wasLastAccount) {
+                // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
+                // directory people may survive – a new QR must not list the previous account's contacts.
+                // The credentials go only once the unregister is done: removed at once, the unregister got no
+                // answer to the server's challenge and the server kept the phone as signed in (as iOS c2abdd7c8).
+                clearAuthInfoAfterUnregister(core)
+                SecureLinkAdmin.scheduleZrtpCacheWipe(core)
+                core.config.cleanEntry("misc", "contacts-vcard-list")
+                core.config.cleanEntry("misc", "fetch_contacts_vcard_list_at_startup")
+                core.config.sync()
+                for (list in core.friendsLists) {
+                    if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
+                        core.removeFriendList(list)
+                    } else {
+                        for (friend in list.friends) list.removeFriend(friend)
                     }
+                }
+                coreContext.contactsManager.notifyContactsListChanged()
+            }
+            accountRemovedEvent.postValue(Event(true))
+
+            if (core.accountList.isEmpty()) {
+                Log.w("$TAG No more account found in Core")
+                if (!core.provisioningUri.isNullOrEmpty()) {
+                    Log.w("$TAG Removing remote provisioning URI")
+                    core.provisioningUri = null
                 }
             }
         }
@@ -372,22 +381,65 @@ class AccountProfileViewModel
     @UiThread
     fun requestDeletion() {
         coreContext.postOnCoreThread { core ->
+            val circle = SecureLinkAdmin.setting(core, "org_name", account)
+                .ifEmpty { account.params.identityAddress?.domain.orEmpty() }
+            val othersRemain = core.accountList.any { it != account }
+            val notice = AppUtils.getFormattedString(
+                if (othersRemain) {
+                    R.string.securelink_deletion_requested_message
+                } else {
+                    R.string.securelink_deletion_requested_last_message
+                },
+                circle
+            )
             SecureLinkAdmin.requestDeletion(core, account) { sent ->
                 if (sent) {
                     refreshDeletionRequested(core)
+                    deletionNoticeLeft = false
                     // the request itself is on the server; the administrator also learns about it on the phone
                     SecureLinkAdmin.openAdminConversation(
                         core,
                         AppUtils.getString(R.string.securelink_deletion_notice_to_admin),
                         { },
-                        { Log.e("$TAG Deletion notice to the administrator could not be sent") },
+                        {
+                            Log.e("$TAG Deletion notice to the administrator could not be sent")
+                            onDeletionNoticeLeft(core)
+                        },
                         sendNow = true,
-                        account = account
+                        account = account,
+                        onLeft = { onDeletionNoticeLeft(core) }
                     )
+                    // never wait for ever: no network, or the chat server does not answer
+                    coreContext.postOnCoreThreadDelayed({ c -> onDeletionNoticeLeft(c) }, 15_000L)
                 }
-                deletionRequestedEvent.postValue(Event(sent))
+                deletionRequestedEvent.postValue(Event(Pair(sent, notice)))
             }
         }
+    }
+
+    // SecureLink B7 (7. 11. 2026): after "Request account deletion" the app went on working and people did not know what
+    // happened – the circle is now signed out from this phone (as "Sign out") once the person has read why, and only
+    // after the notice to the administrator left (it goes with the account's conversations)
+    @UiThread
+    fun signOutAfterDeletionRequest() {
+        coreContext.postOnCoreThread { core ->
+            deletionSignOutWanted = true
+            if (deletionNoticeLeft) signOutAfterDeletionRequest(core)
+        }
+    }
+
+    @WorkerThread
+    private fun onDeletionNoticeLeft(core: Core) {
+        deletionNoticeLeft = true
+        if (deletionSignOutWanted) signOutAfterDeletionRequest(core)
+    }
+
+    @WorkerThread
+    private fun signOutAfterDeletionRequest(core: Core) {
+        if (deletionSignedOut) return
+        deletionSignedOut = true
+        Log.w("$TAG Deletion requested, signing this circle out of the phone")
+        removeAccount(core)
     }
 
     @UiThread

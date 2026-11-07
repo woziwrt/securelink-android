@@ -205,10 +205,26 @@ class AccountProfileFragment : GenericMainFragment() {
         }
 
         viewModel.deletionRequestedEvent.observe(viewLifecycleOwner) {
-            it.consume { sent ->
+            it.consume { (sent, notice) ->
                 val activity = requireActivity() as GenericActivity
                 if (sent) {
-                    activity.showGreenToast(getString(R.string.securelink_deletion_requested_toast), R.drawable.check, 6000)
+                    // SecureLink B7: say that this circle now leaves the phone, then sign it out
+                    val model = ConfirmationDialogModel()
+                    val dialog = DialogUtils.getSecureLinkConfirmDialog(
+                        activity,
+                        model,
+                        getString(R.string.securelink_deletion_requested_title),
+                        notice,
+                        getString(R.string.securelink_signed_out_ok),
+                        showCancel = false
+                    )
+                    val signOut = {
+                        dialog.dismiss()
+                        viewModel.signOutAfterDeletionRequest()
+                    }
+                    model.dismissEvent.observe(viewLifecycleOwner) { e -> e.consume { signOut() } }
+                    model.confirmEvent.observe(viewLifecycleOwner) { e -> e.consume { signOut() } }
+                    dialog.show()
                 } else {
                     activity.showRedToast(getString(R.string.securelink_deletion_request_failed_toast), R.drawable.warning_circle)
                 }

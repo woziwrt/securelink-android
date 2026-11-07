@@ -1144,9 +1144,11 @@
     <string name="securelink_call_did_not_connect">The call did not connect</string>
     <string name="securelink_peer_no_device">Nobody is signed in on this contact\'s phone right now. Messages will wait and be delivered when they sign in again.</string>
     <string name="securelink_request_deletion">Request account deletion</string>
-    <string name="securelink_request_deletion_message">The deletion request goes to the administrator, who deletes your account, your keys and your messages stored on the server within 7 days and lets you know.</string>
+    <string name="securelink_request_deletion_message">The deletion request goes to the administrator, who deletes your account, your keys and your messages stored on the server within 7 days. This circle is then signed out of this phone.</string>
     <string name="securelink_request_deletion_confirm">Request deletion</string>
-    <string name="securelink_deletion_requested_toast">Request sent – the account will be deleted within 7 days</string>
+    <string name="securelink_deletion_requested_title">Deletion requested</string>
+    <string name="securelink_deletion_requested_message">The administrator of the circle %1$s deletes your account within 7 days. The circle is now signed out of this phone together with its conversations and contacts; your other circles keep working.</string>
+    <string name="securelink_deletion_requested_last_message">The administrator of the circle %1$s deletes your account within 7 days. The app now signs out of this phone together with your conversations and contacts.</string>
     <string name="securelink_deletion_request_failed_toast">The request could not be sent, please try again</string>
     <string name="securelink_signout_message">The account is removed from this phone. It stays on the server – to delete it, use “Request account deletion”.</string>
     <string name="securelink_deletion_notice_to_admin">🗑️ I requested the deletion of my account in the app. The request is recorded on the server (securelink-check).</string>
