@@ -116,6 +116,22 @@ object SecureLinkAccounts {
                 }
                 Log.w("$TAG The administrator blocked this phone to be wiped – deleting the account and its data")
                 val othersRemain = c.accountList.any { it != account }
+                if (!othersRemain) {
+                    // the last circle: everything goes, as with the emergency PIN – files, logs, settings, PIN, database
+                    // key; the app looks freshly installed (Petr 7. 11. 2026: a lost or stolen phone must keep nothing).
+                    // Then a new process, as after the emergency PIN: the running core would write the old config back.
+                    val ctx = coreContext.context
+                    EmergencyWipe.run(c, ctx)
+                    val restart = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+                    if (restart != null) {
+                        try {
+                            ctx.startActivity(android.content.Intent.makeRestartActivityTask(restart.component))
+                        } catch (e: Exception) {
+                            Log.w("$TAG No restart from the background ($e) – the next start comes up empty")
+                        }
+                    }
+                    Runtime.getRuntime().exit(0)
+                }
                 wipeAccount(c, account)
                 // not in wipeAccount: the emergency PIN wipes every account and must not start downloads meanwhile
                 if (othersRemain) coreContext.contactsManager.refreshDirectoryAfterSignOut(c, account)
