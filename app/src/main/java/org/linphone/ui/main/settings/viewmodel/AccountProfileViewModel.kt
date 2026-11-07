@@ -305,6 +305,7 @@ class AccountProfileViewModel
             if (!wasLastAccount && directory.isNotEmpty()) {
                 // SecureLink, two servers: signing out of one company takes its people along, the other stays
                 SecureLinkAccounts.removeDirectories(core, core.friendsLists.filter { it.uri == directory })
+                coreContext.contactsManager.refreshDirectoryAfterSignOut(core, account)
             }
             if (wasLastAccount) {
                 // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no

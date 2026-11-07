@@ -115,7 +115,10 @@ object SecureLinkAccounts {
                     return@postOnCoreThread
                 }
                 Log.w("$TAG The administrator blocked this phone to be wiped – deleting the account and its data")
+                val othersRemain = c.accountList.any { it != account }
                 wipeAccount(c, account)
+                // not in wipeAccount: the emergency PIN wipes every account and must not start downloads meanwhile
+                if (othersRemain) coreContext.contactsManager.refreshDirectoryAfterSignOut(c, account)
                 done(true)
             }
         }.start()
@@ -319,6 +322,20 @@ object SecureLinkAccounts {
     @WorkerThread
     fun isMultiServer(core: Core): Boolean = core.accountList.size > 1
 
+    /**
+     * Whether the app downloads the directories itself instead of liblinphone syncing the phone-wide one: two circles,
+     * or one circle whose directory is not misc/contacts-vcard-list. The second case is a circle left after signing out
+     * of the first one (7. 11. 2026, E2E): it never had a list liblinphone syncs (the app's lists are not stored), so the
+     * single-server sync found nothing and the contacts stayed empty, even after a restart.
+     */
+    @WorkerThread
+    fun appDownloadsDirectories(core: Core, leaving: Account? = null): Boolean {
+        val accounts = core.accountList.filter { it != leaving }
+        if (accounts.size > 1) return true
+        val phoneWide = core.config.getString("misc", "contacts-vcard-list", "").orEmpty()
+        return accounts.any { setting(it, "dir_url").let { url -> url.isNotEmpty() && url != phoneWide } }
+    }
+
     /** Gives an account from remote provisioning its server values (securelink_account / [app] / [misc] of the phone). */
     @WorkerThread
     private fun adoptPhoneWideValues(core: Core, account: Account) {
@@ -351,8 +368,8 @@ object SecureLinkAccounts {
      * and nothing at all when no account names a directory (then nobody can tell which list is whose).
      */
     @WorkerThread
-    fun removeOrphanDirectories(core: Core) {
-        val wanted = core.accountList.map { setting(it, "dir_url") }.toMutableSet()
+    fun removeOrphanDirectories(core: Core, leaving: Account? = null) {
+        val wanted = core.accountList.filter { it != leaving }.map { setting(it, "dir_url") }.toMutableSet()
         wanted.add(core.config.getString("misc", "contacts-vcard-list", "").orEmpty())
         wanted.remove("")
         if (wanted.isEmpty()) return
@@ -384,9 +401,9 @@ object SecureLinkAccounts {
 
     /** Downloads every server's directory with that account's own login and puts it into the account's contact list. */
     @WorkerThread
-    fun refreshDirectories(core: Core) {
-        removeOrphanDirectories(core)
-        for (account in core.accountList) {
+    fun refreshDirectories(core: Core, leaving: Account? = null) {
+        removeOrphanDirectories(core, leaving)
+        for (account in core.accountList.filter { it != leaving }) {
             val url = setting(account, "dir_url")
             val auth = account.findAuthInfo()
             if (url.isEmpty() || auth == null) continue

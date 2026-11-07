@@ -619,6 +619,13 @@ class ContactsManager
                 list.synchronizeFriendsFromServer()
             }
         }
+
+        // SecureLink: the directories the app downloads itself are not stored – fetch them at every start (also when a
+        // push wakes the app for a call), not only when a screen opens; liblinphone syncs the phone-wide one itself
+        if (SecureLinkAccounts.appDownloadsDirectories(core)) {
+            Log.i("$TAG SecureLink: core started, downloading the directories of the circles on this phone")
+            SecureLinkAccounts.refreshDirectories(core)
+        }
     }
 
     // SecureLink (as iOS): a change in the directory (new member, someone's first sign-in or sign-out) showed only after
@@ -651,13 +658,26 @@ class ContactsManager
         refreshDirectory(core)
     }
 
+    // SecureLink: one circle of two signed out – its persisted list goes now (not at the next start) and the remaining
+    // circle's directory is downloaded at once instead of after up to 5 minutes (7. 11. 2026, E2E)
     @WorkerThread
-    private fun refreshDirectory(core: Core) {
-        if (SecureLinkAccounts.isMultiServer(core)) { // two servers: each directory with its own account's password
-            SecureLinkAccounts.refreshDirectories(core)
+    fun refreshDirectoryAfterSignOut(core: Core, leaving: Account) {
+        lastDirectoryRefresh = System.currentTimeMillis()
+        Log.i("$TAG SecureLink: circle [${leaving.params.identityAddress?.domain}] signed out, refreshing the directories left")
+        refreshDirectory(core, leaving)
+    }
+
+    @WorkerThread
+    private fun refreshDirectory(core: Core, leaving: Account? = null) {
+        // two circles, or a circle that is not the phone-wide one: each directory with its own account's password, by
+        // the app (a circle left after signing out of the first one has no list liblinphone would sync)
+        if (SecureLinkAccounts.appDownloadsDirectories(core, leaving)) {
+            Log.i("$TAG SecureLink: downloading the directories of the circles on this phone")
+            SecureLinkAccounts.refreshDirectories(core, leaving)
             return
         }
-        SecureLinkAccounts.removeOrphanDirectories(core) // A2: a moved server's or signed-out circle's old directory
+        Log.i("$TAG SecureLink: syncing the phone-wide directory")
+        SecureLinkAccounts.removeOrphanDirectories(core, leaving) // A2: a moved server's or signed-out circle's old directory
         for (list in core.friendsLists) {
             if (list.type == FriendList.Type.VCard4 || list.type == FriendList.Type.CardDAV) {
                 Log.i("$TAG SecureLink: refreshing the server directory [${list.displayName}]")
