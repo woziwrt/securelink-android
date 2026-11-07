@@ -631,6 +631,28 @@ class ContactsManager
         val now = System.currentTimeMillis()
         if (now - lastDirectoryRefresh < 20_000L) return
         lastDirectoryRefresh = now
+        refreshDirectory(core)
+    }
+
+    // SecureLink #28 (7. 11. 2026): a call from someone who joined after the last refresh showed the bare account
+    // number for the whole call, even with the app open. A caller missing from the directory refreshes it at once;
+    // the call screen (CurrentCallViewModel) and the call notification (NotificationsManager) take the name when the
+    // directory is back. At most every 5 s – a caller who really is unknown must not make each ring a download.
+    private var lastCallerDirectoryRefresh = 0L
+
+    @WorkerThread
+    fun refreshDirectoryForUnknownCaller(core: Core, caller: Address) {
+        if (core.findFriend(caller) != null) return
+        val now = System.currentTimeMillis()
+        if (now - lastCallerDirectoryRefresh < 5_000L) return
+        lastCallerDirectoryRefresh = now
+        lastDirectoryRefresh = now
+        Log.i("$TAG SecureLink: call from [${caller.asStringUriOnly()}] who is not in the directory, refreshing it")
+        refreshDirectory(core)
+    }
+
+    @WorkerThread
+    private fun refreshDirectory(core: Core) {
         if (SecureLinkAccounts.isMultiServer(core)) { // two servers: each directory with its own account's password
             SecureLinkAccounts.refreshDirectories(core)
             return

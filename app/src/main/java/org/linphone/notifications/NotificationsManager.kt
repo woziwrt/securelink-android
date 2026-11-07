@@ -144,7 +144,19 @@ class NotificationsManager
 
     private val contactsListener = object : ContactsListener {
         @WorkerThread
-        override fun onContactsLoaded() { }
+        override fun onContactsLoaded() {
+            // SecureLink #28: the directory came back (refreshed for a caller who was not in it yet) – a ringing or
+            // ongoing call notification that shows the bare account number takes the name now
+            for ((remoteAddress, notifiable) in callNotificationsMap.entries) {
+                val parsedAddress = Factory.instance().createAddress(remoteAddress) ?: continue
+                val call = coreContext.core.getCallByRemoteAddress2(parsedAddress) ?: continue
+                if (call.conference != null || LinphoneUtils.getConferenceInfoIfAny(call) != null) continue
+                val friend = coreContext.core.findFriend(call.callLog.remoteAddress) ?: continue
+                if (friend.name.isNullOrEmpty() || friend.name == notifiable.callerName) continue
+                Log.i("$TAG Directory reloaded, updating call notification to contact [${friend.name}]")
+                updateCallNotification(notifiable, call, friend)
+            }
+        }
 
         @WorkerThread
         override fun onContactFoundInRemoteDirectory(friend: Friend) {
@@ -1424,6 +1436,7 @@ class NotificationsManager
         } else {
             val contact = friend
                 ?: coreContext.contactsManager.findContactByAddress(remoteAddress)
+            notifiable.callerName = contact?.name // SecureLink #28: renamed when the directory brings the caller
             getPerson(contact, LinphoneUtils.getDisplayName(remoteAddress))
         }
 
@@ -2084,6 +2097,7 @@ class NotificationsManager
 
         var isGroup: Boolean = false
         var groupTitle: String? = null
+        var callerName: String? = null // SecureLink: the contact name a call notification shows, null for a number
         val messages: ArrayList<NotifiableMessage> = arrayListOf()
     }
 

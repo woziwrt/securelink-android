@@ -397,6 +397,8 @@ class CoreContext
                         call.decline(Reason.Declined)
                         return
                     }
+                    // SecureLink #28: a caller who joined after the last directory refresh – fetch it now for the name
+                    contactsManager.refreshDirectoryForUnknownCaller(core, call.remoteAddress)
                     if (corePreferences.autoAnswerEnabled) {
                         val autoAnswerDelay = corePreferences.autoAnswerDelay
                         if (autoAnswerDelay == 0) {
