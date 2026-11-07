@@ -304,8 +304,7 @@ class AccountProfileViewModel
             core.removeAccountWithData(account)
             if (!wasLastAccount && directory.isNotEmpty()) {
                 // SecureLink, two servers: signing out of one company takes its people along, the other stays
-                core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
-                coreContext.contactsManager.notifyContactsListChanged()
+                SecureLinkAccounts.removeDirectories(core, core.friendsLists.filter { it.uri == directory })
             }
             if (wasLastAccount) {
                 // SecureLink "sign out = delete everything" (as iOS): no credentials, no directory address and no
@@ -324,7 +323,7 @@ class AccountProfileViewModel
                         for (friend in list.friends) list.removeFriend(friend)
                     }
                 }
-                coreContext.contactsManager.notifyContactsListChanged()
+                coreContext.contactsManager.onDirectoriesRemoved()
             }
             accountRemovedEvent.postValue(Event(true))
 

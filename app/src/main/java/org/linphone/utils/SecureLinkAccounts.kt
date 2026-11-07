@@ -124,7 +124,7 @@ object SecureLinkAccounts {
         core.removeAccountWithData(account)
         // blocked: no unregister will come to take the credentials along
         if (auth != null) core.removeAuthInfo(auth)
-        if (directory.isNotEmpty()) core.friendsLists.filter { it.uri == directory }.forEach { core.removeFriendList(it) }
+        if (directory.isNotEmpty()) removeDirectories(core, core.friendsLists.filter { it.uri == directory })
         if (wasLast) {
             core.clearAllAuthInfo()
             core.config.cleanSection(NAMES_SECTION)
@@ -140,7 +140,7 @@ object SecureLinkAccounts {
                 }
             }
         }
-        coreContext.contactsManager.notifyContactsListChanged()
+        coreContext.contactsManager.onDirectoriesRemoved()
     }
 
     /**
@@ -353,17 +353,27 @@ object SecureLinkAccounts {
         val orphans = core.friendsLists.filter {
             it.type == FriendList.Type.VCard4 && !it.uri.isNullOrEmpty() && it.uri !in wanted
         }
-        if (orphans.isEmpty()) return
-        val kept = core.friendsLists.filter { it !in orphans }
+        orphans.forEach { Log.w("$TAG Directory [${it.displayName}] [${it.uri}] belongs to no account any more") }
+        removeDirectories(core, orphans)
+    }
+
+    /**
+     * Removes a circle's directory lists – its people vanish from the app (contacts, names in conversations and calls).
+     * Only the app's own lists: SecureLink never reads or writes the phone's address book (no contacts permission).
+     */
+    @WorkerThread
+    fun removeDirectories(core: Core, lists: List<FriendList>) {
+        if (lists.isEmpty()) return
+        val kept = core.friendsLists.filter { it !in lists }
             .flatMap { list -> list.friends.mapNotNull { it.address?.username } }.toSet()
-        for (list in orphans) {
-            Log.w("$TAG Directory [${list.displayName}] [${list.uri}] belongs to no account any more, removing it")
+        for (list in lists) {
+            Log.w("$TAG Removing the directory [${list.displayName}] [${list.uri}] with ${list.friends.size} people")
             for (friend in list.friends) { // the remembered names of its people go too, unless another circle has them
                 friend.address?.username?.takeIf { it !in kept }?.let { core.config.cleanEntry(NAMES_SECTION, it) }
             }
             core.removeFriendList(list)
         }
-        coreContext.contactsManager.notifyContactsListChanged()
+        coreContext.contactsManager.onDirectoriesRemoved()
     }
 
     /** Downloads every server's directory with that account's own login and puts it into the account's contact list. */

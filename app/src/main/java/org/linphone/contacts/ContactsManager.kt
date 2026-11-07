@@ -673,6 +673,19 @@ class ContactsManager
     @WorkerThread
     fun onDirectoryRefreshed(friendList: FriendList) {
         Log.i("$TAG Directory [${friendList.displayName}] refreshed")
+        forgetCachedContacts()
+    }
+
+    // SecureLink: a circle's directory went (sign-out of one circle, wipe, moved server) – its people must not stay in
+    // the cached contact models of conversations, history and calls
+    @WorkerThread
+    fun onDirectoriesRemoved() {
+        Log.i("$TAG Directories removed")
+        forgetCachedContacts()
+    }
+
+    @WorkerThread
+    private fun forgetCachedContacts() {
         knownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
         knownContactsAvatarsMap.clear()
         unknownContactsAvatarsMap.values.forEach(ContactAvatarModel::destroy)
