@@ -171,8 +171,12 @@ class HelpViewModel
         }
     }
 
+    private fun fullVersion(): String =
+        "${BuildConfig.VERSION_NAME} (${AppUtils.getString(R.string.linphone_app_version).substringBefore('+')})"
+
     init {
-        val currentVersion = BuildConfig.VERSION_NAME
+        // SecureLink: "1.3 (6.2.8.110)" – the release people know and the exact build support needs
+        val currentVersion = fullVersion()
         version.value = currentVersion
 
         val versionCode = BuildConfig.VERSION_CODE
@@ -408,7 +412,7 @@ class HelpViewModel
                         }
                     )
                 )
-                lines.add(ctx.getString(R.string.securelink_check_version, BuildConfig.VERSION_NAME))
+                lines.add(ctx.getString(R.string.securelink_check_version, fullVersion()))
                 Log.i("$TAG Connection check:\n${lines.joinToString("\n")}")
                 connectionCheckEvent.postValue(Event(lines.joinToString("\n")))
             }

@@ -111,7 +111,10 @@ android {
         // SecureLink: Google Play needs a higher versionCode for every upload – 6.2.8.NN → 6020080NN
         // (always above the old fixed 602008, so phones with an older APK from the server still update)
         versionCode = 602008000 + gitCommits
-        versionName = "6.2.8"
+        // SecureLink: the version people know (1.2, 1.3 …), as iOS CFBundleShortVersionString – shown in About, in the
+        // connection check and by Google Play; "6.2.8" told nobody whether a phone had 1.1 or 1.2 (10. 11. 2026).
+        // Raise it with every release. The server reads the full 6.2.8.NN from the user-agent, not from here.
+        versionName = "1.3"
 
         manifestPlaceholders["appAuthRedirectScheme"] = packageName
 
