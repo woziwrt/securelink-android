@@ -60,10 +60,8 @@
         android:largeHeap="true"
         tools:targetApi="35">
 
-        <!-- Required for chat message & call notifications to be displayed in Android auto -->
-        <meta-data
-            android:name="com.google.android.gms.car.application"
-            android:resource="@xml/automotive_app_desc"/>
+        <!-- SecureLink: no Android Auto. The car host would read messages aloud and Google Play
+             rejected 6.2.8.106 under the Auto App Quality Guidelines. -->
 
         <!--<meta-data
             android:name="androidx.car.app.minCarApiLevel"
